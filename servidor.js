@@ -1,19 +1,18 @@
 import 'dotenv/config';
+import fs from 'fs/promises';
 import { readFile } from 'fs/promises';
 import fastify from 'fastify';
-import axios from 'axios';
 import * as baseDeDatos from './utilidades/baseDatos.js';
-import { casosPorEntradas } from './utilidades/ayudas.js';
+import { carpetaTemporales } from './utilidades/constantes.js';
 
 const servidor = fastify();
 
 servidor.get('/', async (request, reply) => {
-  try {
-    const { data } = await axios.get(casosPorEntradas('json', 10, 10));
-    return data;
-  } catch (error) {
-    console.error(error);
-  }
+  // baseDeDatos.procesarEnFlujo();
+  // baseDeDatos.extraerTodos();
+  baseDeDatos.raspado();
+
+  return { status: 'ok' };
 });
 
 servidor.get('/actualizar', async (request, reply) => {
@@ -31,7 +30,13 @@ servidor.get('/descriptores', async (request, reply) => {
   return JSON.parse(descriptores);
 });
 
+servidor.get('/procesar', async (request, reply) => {
+  // const
+});
+
 const inicio = async () => {
+  await fs.mkdir(carpetaTemporales, { recursive: true });
+
   await baseDeDatos.inicio();
 
   try {

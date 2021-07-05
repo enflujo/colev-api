@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  bd:
+    container_name: colev-api-bd
+    image: mongo
+    restart: unless-stopped
+    networks:
+      - colev-api
+    volumes:
+      - ./basededatos:/data/db
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${BD_USUARIO}
+      MONGO_INITDB_ROOT_PASSWORD: ${BD_CLAVE}
+      MONGO_INITDB_DATABASE: covid
+
+  mongo-express:
+    container_name: colev-api-mongoexpress
+    image: mongo-express
+    restart: unless-stopped
+    networks:
+      - colev-api
+    ports:
+      - 8081:8081
+    depends_on:
+      - bd
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${BD_USUARIO}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${BD_CLAVE}
+      ME_CONFIG_MONGODB_SERVER: bd
+
+networks:
+  colev-api:
