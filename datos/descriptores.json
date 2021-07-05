@@ -50,8 +50,14 @@
   },
   "fuente_tipo_contagio": {
     "tipo": "string",
+    "relacion": {
+      "Relacionado": "",
+      "Importado": "",
+      "En estudio": "",
+      "Comunitaria": ""
+    },
     "descripcion": "Relacionado Importado En estudio Comunitario",
-    "_nota": "¿tipología y definiciones?"
+    "_nota": "¿definiciones?. En los datos no es 'Comunitario' sino 'Comunitaria'"
   },
   "id_de_caso": {
     "tipo": "number",
@@ -87,6 +93,10 @@
   },
   "tipo_recuperacion": {
     "tipo": "string",
+    "relacion": {
+      "PCR": "La persona se encuentra recuperada por segunda muestra, en donde dio negativo para el virus",
+      "tiempo": "Cumplio 30 días posteriores al inicio de síntomas o toma de muestras que no tienen síntomas, que no tengan más de 70 años ni que esté hospitalizado."
+    },
     "descripcion": "Se refiere a la variable de tipo de recuperación que tiene dos opciones: PCR y tiempo. PCR indica que la persona se encuentra recuperada por segunda muestra, en donde dio negativo para el virus; mientras que tiempo significa que son personas que cumplieron 30 días posteriores al inicio de síntomas o toma de muestras que no tienen síntomas, que no tengan más de 70 años ni que estén hospitalizados."
   },
   "ubicacion": {
