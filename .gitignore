@@ -8,3 +8,5 @@ node_modules/
 
 # Configuración local
 .env
+basededatos/
+.temporales/
