@@ -79,8 +79,12 @@ export const extraerTodos = async (pagina) => {
 };
 
 export const raspado = async (url) => {
-  const rutaArchivo = await descargarArchivo('2021-06-30');
-  console.log(rutaArchivo);
+  const hoy = new Date();
+  const ayer = new Date(hoy.setHours(-24)).toLocaleDateString('en-CA');
+  const fechaHoy = new Date().toLocaleDateString('en-CA');
+  console.log(fechaHoy, ayer);
+  // const rutaArchivo = await descargarArchivo('2021-06-30');
+  // console.log(rutaArchivo);
 };
 
 export const procesarEnFlujo = (rutaArchivo) => {

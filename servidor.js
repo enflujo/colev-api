@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import { readFile } from 'fs/promises';
 import fastify from 'fastify';
 import * as baseDeDatos from './utilidades/baseDatos.js';
-import { carpetaTemporales } from './utilidades/constantes.js';
+import { carpetaTemporales, aviso, cyan, cadena } from './utilidades/constantes.js';
 
 const servidor = fastify();
 
@@ -41,6 +41,7 @@ const inicio = async () => {
 
   try {
     await servidor.listen(3000);
+    console.log(`${cadena} ${cyan('Servidor disponible en:')} ${aviso.underline('http://localhost:3000')}`);
   } catch (err) {
     servidor.log.error(err);
     process.exit(1);
