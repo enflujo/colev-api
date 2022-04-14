@@ -1,7 +1,7 @@
 {
   "_creditos": {
     "fuente": "Las descripciones según: https://dev.socrata.com/foundry/www.datos.gov.co/gt2j-8ykr",
-    "fecha": "Información extraida manualmente: Junio 28, 2021"
+    "fecha": "Información extraída manualmente: Junio 28, 2021"
   },
   "ciudad_municipio": {
     "tipo": "number",
@@ -26,7 +26,7 @@
   "estado": {
     "tipo": "string",
     "descripcion": "Por seguridad de las personas, algunos datos serán limitados evitando así la exposición y posible identificación en determinados municipios.",
-    "_nota": "Esta descripción no tiene mucho sentido, sería útil saber la forma como se tipifica el estado y sus definciones"
+    "_nota": "Esta descripción no tiene mucho sentido, sería útil saber la forma como se tipifica el estado y sus definiciones"
   },
   "fecha_de_notificaci_n": {
     "tipo": "string",
@@ -95,7 +95,7 @@
     "tipo": "string",
     "relacion": {
       "PCR": "La persona se encuentra recuperada por segunda muestra, en donde dio negativo para el virus",
-      "tiempo": "Cumplio 30 días posteriores al inicio de síntomas o toma de muestras que no tienen síntomas, que no tengan más de 70 años ni que esté hospitalizado."
+      "tiempo": "Cumplió 30 días posteriores al inicio de síntomas o toma de muestras que no tienen síntomas, que no tengan más de 70 años ni que esté hospitalizado."
     },
     "descripcion": "Se refiere a la variable de tipo de recuperación que tiene dos opciones: PCR y tiempo. PCR indica que la persona se encuentra recuperada por segunda muestra, en donde dio negativo para el virus; mientras que tiempo significa que son personas que cumplieron 30 días posteriores al inicio de síntomas o toma de muestras que no tienen síntomas, que no tengan más de 70 años ni que estén hospitalizados."
   },
