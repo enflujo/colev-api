@@ -4,6 +4,7 @@ basededatos/
 .temporales/
 datos/*
 !datos/descriptores.json
+!datos/departamentos.js
 cache
 
 # Logs
