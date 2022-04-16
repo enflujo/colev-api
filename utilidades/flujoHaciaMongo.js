@@ -1,19 +1,19 @@
 import { MongoClient } from 'mongodb';
 import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
+import axios from 'axios';
 import ms from 'ms';
-const { USAR_CACHE } = process.env;
+import { puntoDatos } from './constantes.js';
+const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO, TOKEN } = process.env;
 
 const cache = new Keyv({
-  store: new KeyvRedis('redis://localhost:6379'),
+  store: new KeyvRedis(`redis://localhost:${CACHE_PUERTO}`),
   ttl: ms('10s'),
   namespace: 'colev-api-cache',
 });
 
-const { BD_USUARIO, BD_CLAVE, BD_PUERTO } = process.env;
-const url = `mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`;
-const config = { nombreBD: 'covid19', coleccion: 'casos', administrador: null };
-const cliente = new MongoClient(url);
+const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
+const config = { nombreBD: 'covid19', coleccionCasos: 'casos', coleccionGeneral: 'general', administrador: null };
 
 export const casosPorDia = async () => {
   const id = 'casosPorDia';
@@ -21,10 +21,7 @@ export const casosPorDia = async () => {
 
   if (USAR_CACHE === 'true') datos = await cache.get(id);
 
-  if (datos) {
-    console.log('Desde cache');
-  } else {
-    console.log('Desde mongo');
+  if (!datos) {
     const casos = await config.administrador
       .aggregate([
         {
@@ -79,7 +76,6 @@ export const muertos = async () => {
 export const cerrar = async () => {
   await cliente.close();
   config.administrador = null;
-  console.log('Conexión a base de datos cerrada');
 };
 
 export const conectar = async () => {
@@ -87,7 +83,62 @@ export const conectar = async () => {
 
   await cliente.connect();
   const bd = cliente.db(config.nombreBD);
-  config.administrador = bd.collection(config.coleccion);
+  config.administrador = bd.collection(config.coleccionCasos);
+};
 
-  console.log('Conectado a base de datos');
+export const guardarVarios = async (datos) => {
+  try {
+    await conectar();
+    const entradas = datos.map((caso) => {
+      return {
+        updateOne: {
+          filter: { _id: caso._id },
+          update: { $set: caso },
+          upsert: true,
+        },
+      };
+    });
+
+    await config.administrador.bulkWrite(entradas);
+  } finally {
+    await cerrar();
+  }
+};
+
+export const actualizarUltimoId = async () => {
+  try {
+    const { data } = await axios.get(`${puntoDatos}.json?$$app_token=${TOKEN}&$select=max(id_de_caso)`);
+
+    if (data && data.length && data[0].max_id_de_caso && !isNaN(data[0].max_id_de_caso)) {
+      const ultimoCasoId = +data[0].max_id_de_caso;
+      await cliente.connect();
+      const bd = cliente.db(config.nombreBD);
+      const coleccion = bd.collection(config.coleccionGeneral);
+
+      const obj = await coleccion.findOne({ nombre: 'ultimoCaso' });
+
+      console.log(obj.ultimoCasoId, ultimoCasoId);
+
+      if (obj.ultimoCasoId === ultimoCasoId) {
+        console.log('El último caso es el mismo');
+      } else {
+        await coleccion.updateOne(
+          {
+            nombre: 'ultimoCaso',
+          },
+          {
+            $set: {
+              ultimoCasoId: ultimoCasoId,
+              anterior: obj.ultimoCasoId ? obj.ultimoCasoId : 0,
+            },
+          },
+          {
+            upsert: true,
+          }
+        );
+      }
+    }
+  } finally {
+    await cliente.close();
+  }
 };

@@ -8,6 +8,7 @@ import { puntoDatos, puntoDatosFijos, cyan, aviso, conector, bloque, error } fro
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
+const { TOKEN } = process.env;
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -33,20 +34,14 @@ export const archivoExiste = async (ruta) => {
  * @returns Url para hacer la petición al API.
  */
 export const casosPorEntradas = (formato, numeroDeEntradas, offset) => {
-  return `${puntoDatos}.${formato}?$$app_token=${process.env.TOKEN}&$order=id_de_caso&$limit=${numeroDeEntradas}&$offset=${offset}`;
+  return `${puntoDatos}.${formato}?$$app_token=${TOKEN}&$order=id_de_caso&$limit=${numeroDeEntradas}&$offset=${offset}`;
 };
 
-/**
- * Crea la URL para buscar el ID del último caso registrado.
- *
- * @returns URL para buscar el ID del último caso registrado
- */
-export const ultimaCaso = () => {
-  return `${puntoDatos}.json?$$app_token=${process.env.TOKEN}&$select=max(id_de_caso)`;
-};
+export const totalCasosUrl = () => `${puntoDatos}.json?$$app_token=${TOKEN}&$select=count(id_de_caso)`;
+export const ultimoCasoIdUrl = () => `${puntoDatos}.json?$$app_token=${TOKEN}&$select=max(id_de_caso)`;
 
 /**
- * Descarga el archivo .rar que contiene la base de datos de INS.
+ * Descarga el archivo que contiene la base de datos de INS.
  * Estos los suben estáticamente a: https://www.ins.gov.co/BoletinesCasosCOVID19Colombia/YYYY-MM-DD.rar
  *
  * @param {string} fecha Fecha en formato 'YYYY-MM-DD'
@@ -135,6 +130,11 @@ export const normalizarTexto = (texto) =>
     .toLowerCase()
     .trim();
 
+/**
+ * Guardar datos localmente en archivo .json
+ * @param {Object} json Datos que se quieren guardar en formato JSON.
+ * @param {String} nombre Nombre del archivo, resulta en ${nombre}.json
+ */
 export const guardarJSON = (json, nombre) => {
   writeFileSync(`./datos/${nombre}.json`, JSON.stringify(json, convertirSet, 2));
 };

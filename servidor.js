@@ -1,19 +1,24 @@
 import 'dotenv/config';
-import fs from 'fs/promises';
-import { readFile } from 'fs/promises';
+import { readFile, mkdir } from 'fs/promises';
 import fastify from 'fastify';
 import cors from 'fastify-cors';
-import * as baseDeDatos from './utilidades/baseDatos.js';
+import * as extraerDatos from './utilidades/baseDatos.js';
 import { carpetaTemporales, aviso, cyan, cadena } from './utilidades/constantes.js';
-import { conectar, cerrar, casosPorDia } from './utilidades/flujoHaciaMongo.js';
+import { totalCasosUrl, ultimoCasoIdUrl } from './utilidades/ayudas.js';
+import axios from 'axios';
+
 const PUERTO = 8080;
 
 const servidor = fastify();
 servidor.register(cors);
 
 servidor.get('/', async (request, reply) => {
-  baseDeDatos.extraerTodos();
-  // baseDeDatos.actualizarUltimoCasoId();
+  // extraerDatos.extraerTodos();
+  const total = await axios(totalCasosUrl());
+  console.log(total.data);
+  const ultimo = await axios(ultimoCasoIdUrl());
+  console.log(ultimo.data);
+
   // try {
   //   const datos = await conectar().then(casosPorDia);
   //   reply.code(200).header('Content-Type', 'application/json; charset=utf-8').send(datos);
@@ -28,7 +33,7 @@ servidor.get('/total-casos', async (request, reply) => {});
 
 servidor.get('/actualizar', async (request, reply) => {
   try {
-    const ultimoCasoId = await baseDeDatos.actualizarUltimoCasoId();
+    const ultimoCasoId = await extraerDatos.actualizarUltimoCasoId();
     return { ultimoCasoId };
   } catch (error) {
     console.error(error);
@@ -46,14 +51,32 @@ servidor.get('/procesar', async (request, reply) => {
 });
 
 servidor.get('/extraer', async (request, reply) => {
-  await baseDeDatos.raspado();
+  try {
+    const { data } = await axios(totalCasosUrl());
+
+    if (data && data.length && data[0].count_id_de_caso) {
+      const totalCasos = +data[0].count_id_de_caso;
+      reply.code(200).header('Content-Type', 'application/json; charset=utf-8').send({
+        mensaje: 'El servidor inició extracción y procesamiento de todos los datos',
+        total: totalCasos,
+      });
+
+      extraerDatos.extraerTodos(totalCasos);
+    }
+  } catch (err) {
+    reply.code(err.response.status).send({ error: err.response.status, mensaje: err.response.data.message });
+  }
+});
+
+servidor.get('/raspar', async (request, reply) => {
+  await extraerDatos.raspado();
 
   return { status: 'ok' };
 });
 
 const inicio = async () => {
-  await fs.mkdir(carpetaTemporales, { recursive: true });
-  await baseDeDatos.inicio();
+  await mkdir(carpetaTemporales, { recursive: true });
+  // await actualizarUltimoId();
 
   try {
     await servidor.listen(PUERTO);

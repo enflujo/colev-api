@@ -1,110 +1,96 @@
 import mongo from 'mongodb';
 const { MongoClient } = mongo;
-import { Low, JSONFile } from 'lowdb';
 import axios from 'axios';
 import filesize from 'filesize';
 import { SingleBar } from 'cli-progress';
-import {
-  ultimaCaso,
-  casosPorEntradas,
-  descargarArchivo,
-  guardarJSON,
-  formatoNombreFecha,
-  regresarUnDia,
-} from './ayudas.js';
-import { fileURLToPath } from 'node:url';
-import { createReadStream } from 'fs';
+import { casosPorEntradas, descargarArchivo, guardarJSON, formatoNombreFecha, regresarUnDia } from './ayudas.js';
 import { parse } from 'csv-parse';
 import Streamzip from 'node-stream-zip';
 import { limpieza } from './limpieza.js';
 import { aviso, gorila, bloque, cyan, chulo, verde } from './constantes.js';
 import { errata } from './errata.js';
+import { actualizarUltimoId, guardarVarios } from './flujoHaciaMongo.js';
+import { llavesSoda } from '../datos/descriptores.js';
 const { BD_USUARIO, BD_CLAVE, BD_PUERTO } = process.env;
-
-const archivo = fileURLToPath(new URL('../datos/estados.json', import.meta.url));
-const adaptador = new JSONFile(archivo);
-const bd = new Low(adaptador);
-
-export const inicio = async () => {
-  await bd.read();
-  bd.data ||= {
-    anterior: 0,
-    ultimoCasoId: 0,
-  };
-};
-
-/**
- * Extrae y guarda el ID del último caso registrado.
- *
- * @returns ID del último caso registrado
- */
-export const actualizarUltimoCasoId = async () => {
-  try {
-    const { data } = await axios.get(ultimaCaso());
-
-    if (data.length && data[0].max_id_de_caso && !isNaN(data[0].max_id_de_caso)) {
-      const ultimoCasoId = +data[0].max_id_de_caso;
-
-      if (bd.data.ultimoCasoId === ultimoCasoId) {
-        console.log('El último caso es el mismo');
-      } else {
-        bd.data.anterior = bd.data.ultimoCasoId;
-        bd.data.ultimoCasoId = +data[0].max_id_de_caso;
-
-        await bd.write();
-      }
-
-      return ultimoCasoId;
-    } else if (!data.length) {
-      throw new Error('No hay registros que se llamen "id_de_caso"');
-    } else if (!data[0].hasOwnProperty('max_id_de_caso')) {
-      throw new Error(
-        `No se puede extraer el id del último caso, el resultado de la petición fue: ${JSON.stringify(data[0])}`
-      );
-    } else if (isNaN(data[0].max_id_de_caso)) {
-      throw new Error(`El ID del caso no es un numero, el resultado fue: ${JSON.stringify(data[0].max_id_de_caso)}`);
-    }
-  } catch (error) {
-    console.error(error);
-    return error;
-  }
-};
-
-export const extraerTodos = async (pagina = 0) => {
-  const numeroPorPagina = 20000;
-
-  try {
-    const { data, status, headers } = await axios.get(
-      casosPorEntradas('json', numeroPorPagina, pagina * numeroPorPagina)
-    );
-
-    console.log(`Pagina: ${pagina} - Status: ${status} - Número de casos nuevos: ${data.length}}`);
-
-    if (data.length) {
-      console.log(data.length);
-
-      await extraerTodos(++pagina);
-    } else {
-      console.log('..:: Termino de extraer los datos ::..');
-    }
-  } catch (error) {
-    throw new Error(error);
-  }
-};
 
 function formatoBarra(opciones, params, payload) {
   const completado = Math.round(params.progress * opciones.barsize);
   const incompleto = opciones.barsize - completado;
   const { barCompleteString: barra1, barIncompleteString: barra2, barGlue } = opciones;
   const barra = barra1.substr(0, completado) + barGlue + barra2.substr(0, incompleto);
-  const proceso = `${filesize(params.value)} / ${filesize(params.total)}`;
+  // const proceso = `${filesize(params.value)} / ${filesize(params.total)}`;
+  const proceso = `${payload.porcentaje}%`;
 
   if (params.value >= params.total) {
     return `${chulo} ${aviso('Archivo procesado')} |${verde(barra)}| ${proceso}`;
   } else {
-    return `${bloque(gorila)} ${aviso('Procesando')} |${cyan(barra)}| ${proceso}`;
+    return `${bloque(gorila)} ${aviso('Procesando')} |${cyan(barra)}| pagina: ${payload.pagina} de ${
+      payload.totalPaginas
+    } | ${proceso}`;
   }
 }
+
+const barraProceso = new SingleBar({
+  format: formatoBarra,
+  barCompleteChar: '\u2588',
+  barIncompleteChar: '\u2591',
+  hideCursor: true,
+});
+
+export const extraerTodos = async (total, pagina = 0) => {
+  /**
+   * La cantidad de casos por petición se procesan en memoria por lo que toca mantenerlo bajo.
+   * Entre más alto, el servidor necesita tener más memoria ram para procesarlos.
+   * El peso inicial (sin considerar la ram que necesita luego para procesar) se puede estimar con:
+   * 10000 alrededor de 6.5mb | 20000 alrededor de 13mb | 50000 alrededor de 32.5mb
+   *
+   * EL API donde están los datos (SODA) supuestamente no tiene límites desde la versión 2.1.
+   * Mongo tiene un limite de 100,000 en `insertMany`.
+   */
+  const numeroPorPagina = 20000;
+  if (pagina === 0) {
+    barraProceso.start(total, 0, {
+      pagina: 0,
+      totalPaginas: Math.ceil(total / numeroPorPagina) - 1,
+      porcentaje: 0,
+    });
+  }
+
+  try {
+    const inicioBloque = pagina * numeroPorPagina;
+    const { data } = await axios.get(casosPorEntradas('json', numeroPorPagina, inicioBloque));
+
+    if (data.length) {
+      const datosLimpios = [];
+
+      data.forEach((d) => {
+        const casoLimpio = limpieza(d, llavesSoda);
+        if (casoLimpio) datosLimpios.push(casoLimpio);
+      });
+
+      const casosProcesados = inicioBloque + numeroPorPagina;
+
+      await guardarVarios(datosLimpios).catch(console.dir);
+      barraProceso.update(casosProcesados, {
+        pagina: pagina,
+        porcentaje: ((casosProcesados / total) * 100).toFixed(1),
+      });
+      // console.log(datos.length);
+      // guardarJSON(datosLimpios, 'pruebaLimpia2');
+      // guardarJSON(errata, 'errata');
+
+      extraerTodos(total, pagina + 1);
+    } else {
+      guardarJSON(errata, 'errata');
+      await actualizarUltimoId();
+      console.log('..:: Termino de extraer los datos ::..');
+
+      return;
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 
 export const raspado = async (fecha = new Date(), limite = 15) => {
   const rutaArchivo = await descargarArchivo(formatoNombreFecha(fecha), 'zip');
@@ -161,25 +147,4 @@ export const raspado = async (fecha = new Date(), limite = 15) => {
       await raspado(regresarUnDia(fecha), limite);
     }
   }
-};
-
-export const procesarEnFlujo = (rutaArchivo) => {
-  const guardar = flujoHaciaMongo(config);
-  const flujo = createReadStream(rutaArchivo, 'latin1');
-
-  flujo
-    .pipe(
-      csv({
-        trim: true,
-        columns: true,
-      })
-    )
-    .pipe(limpieza)
-    // .pipe(guardar)
-    .on('end', () => {
-      console.log('..:: FIN ::..');
-    })
-    .on('error', (err) => {
-      console.log(err);
-    });
 };
