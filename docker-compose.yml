@@ -23,7 +23,7 @@ services:
     networks:
       - colev-api
     ports:
-      - '6379:6379'
+      - ${CACHE_PUERTO}:6379
 
   mongo-express:
     container_name: colev-api-mongoexpress
