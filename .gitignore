@@ -6,6 +6,7 @@ datos/*
 !datos/descriptores.js
 !datos/lugaresColombia.js
 cache
+api
 
 # Logs
 logs

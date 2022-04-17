@@ -1,4 +1,4 @@
-export const errata = {
+export default {
   id: new Set(),
   departamentos: new Set(),
   municipios: new Set(),
@@ -9,4 +9,5 @@ export const errata = {
   recuperacion: new Set(),
   sexo: new Set(),
   perEtnica: new Set(),
+  fuenteContagio: new Set(),
 };

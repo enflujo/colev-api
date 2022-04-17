@@ -1,0 +1,27 @@
+import { LlavesCaso } from '../tipos';
+
+export const llavesSoda: LlavesCaso = {
+  id: 'id_de_caso',
+  fechaReporte: 'fecha_reporte_web',
+  fechaNotificacion: 'fecha_de_notificaci_n',
+  dep: 'departamento',
+  depNom: 'departamento_nom',
+  mun: 'ciudad_municipio',
+  munNom: 'ciudad_municipio_nom',
+  edad: 'edad',
+  unidadMedida: 'unidad_medida',
+  sexo: 'sexo',
+  fuenteContagio: 'fuente_tipo_contagio',
+  ubicacion: 'ubicacion',
+  estado: 'estado',
+  pais: 'pais_viajo_1_cod',
+  paisNom: 'pais_viajo_1_nom',
+  recuperado: 'recuperado',
+  fechaSintomas: 'fecha_inicio_sintomas',
+  fechaMuerte: 'fecha_muerte',
+  fechaDiag: 'fecha_diagnostico',
+  fechaRecuperado: 'fecha_recuperado',
+  tipoRecuperacion: 'tipo_recuperacion',
+  perEtn: 'per_etn_',
+  nomGrupo: 'nom_grupo_',
+};
