@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { casosPorEntradasUrl, logError } from '../../utilidades/constantes';
-import { Caso, CasoSoda } from '../../tipos';
+import { CasoLimpio, CasoFuente } from '../../tipos';
 import limpieza from '../limpieza';
 import { llavesSoda } from '../../utilidades/llavesCasos';
 import { guardarJSON } from '../../utilidades/ayudas';
@@ -39,10 +39,10 @@ export default async function extraer(total: number, pagina = iniciarEnPg) {
     const { data } = await axios.get(casosPorEntradasUrl('json', numeroPorPagina, inicioBloque));
 
     if (data.length) {
-      const datosLimpios: Caso[] = [];
+      const datosLimpios: CasoLimpio[] = [];
 
       try {
-        data.forEach((d: CasoSoda) => {
+        data.forEach((d: CasoFuente) => {
           const casoLimpio = limpieza(d, llavesSoda);
           if (casoLimpio) datosLimpios.push(casoLimpio);
         });

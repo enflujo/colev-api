@@ -1,10 +1,10 @@
 import errata from '../errata';
-import { CasoSoda, LlavesCaso, Pais } from '../../tipos';
+import { CasoFuente, LlavesCaso, Pais } from '../../tipos';
 import { esIgual, esNumero, existeEn, igualAprox, normalizarTexto } from '../../utilidades/ayudas';
 
 const datosPaises: Pais[] = require('../../../node_modules/world_countries_lists/data/countries/es/world.json');
 
-export default (caso: CasoSoda, llaves: LlavesCaso): Pais | undefined => {
+export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
   let codigo = caso[llaves.pais] as string;
   let nombre = caso[llaves.paisNom] as string;
 

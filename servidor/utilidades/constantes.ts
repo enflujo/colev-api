@@ -38,3 +38,12 @@ export const totalCasosUrl = () => `${puntoDatos}.json?$$app_token=${process.env
 export const casosPorEntradasUrl = (formato: string, numeroDeEntradas: number, offset: number): string => {
   return `${puntoDatos}.${formato}?$$app_token=${process.env.TOKEN}&$order=id_de_caso&$limit=${numeroDeEntradas}&$offset=${offset}`;
 };
+
+/**
+ * Los archivos los exportan en formato .xlsx o .csv comprimidos en .rar o .zip
+ */
+export const puntoDatosFijos = 'https://www.ins.gov.co/BoletinesCasosCOVID19Colombia';
+
+const daneBase = 'https://geoportal.dane.gov.co/laboratorio/serviciosjson/gdivipola/servicios/';
+export const daneMunicipios = `${daneBase}municipios.php`;
+export const daneCentrosPoblados = `${daneBase}tabla_centros_p.php`;

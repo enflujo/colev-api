@@ -4,7 +4,7 @@ export type ProgressPayload = {
   terminado: boolean;
 };
 
-export type Caso = {
+export type CasoLimpio = {
   _id: number;
   fechaReporte?: Date;
   fechaNot?: Date;
@@ -24,83 +24,62 @@ export type Caso = {
   nomGrupo?: string;
 };
 
-export type LlavesCaso = {
-  id: keyof CasoSoda;
-  fechaReporte: keyof CasoSoda;
-  fechaNotificacion: keyof CasoSoda;
-  dep: keyof CasoSoda;
-  depNom: keyof CasoSoda;
-  mun: keyof CasoSoda;
-  munNom: keyof CasoSoda;
-  edad: keyof CasoSoda;
-  unidadMedida: keyof CasoSoda;
-  sexo: keyof CasoSoda;
-  fuenteContagio: keyof CasoSoda;
-  ubicacion: keyof CasoSoda;
-  estado: keyof CasoSoda;
-  pais: keyof CasoSoda;
-  paisNom: keyof CasoSoda;
-  recuperado: keyof CasoSoda;
-  fechaSintomas: keyof CasoSoda;
-  fechaMuerte: keyof CasoSoda;
-  fechaDiag: keyof CasoSoda;
-  fechaRecuperado: keyof CasoSoda;
-  tipoRecuperacion: keyof CasoSoda;
-  perEtn: keyof CasoSoda;
-  nomGrupo: keyof CasoSoda;
+export type CasoFuente = {
+  [key: string]: string;
 };
 
 /**
- * Fuente: Las descripciones según: https://dev.socrata.com/foundry/www.datos.gov.co/gt2j-8ykr
+ * Los nombres de las columnas (variables) en las diferentes fuentes de datos.
  *
+ * Fuente: Las descripciones según: https://dev.socrata.com/foundry/www.datos.gov.co/gt2j-8ykr
  * Información extraída manualmente: Junio 28, 2021
  */
-export type CasoSoda = {
-  /** Fecha de publicación en sitio web */
-  fecha_reporte_web: string;
+export type LlavesCaso = {
   /** ID de caso */
-  id_de_caso: string;
+  id: 'id_de_caso' | 'Caso';
+  /** Fecha de publicación en sitio web */
+  fechaReporte: 'fecha_reporte_web' | 'fecha_hoy_casos';
   /** Fecha de notificación a SIVIGILA */
-  fecha_de_notificaci_n: string;
+  fechaNotificacion: 'fecha_de_notificaci_n' | 'Fecha Not';
   /** Código DIVIPOLA departamento */
-  departamento: string;
+  dep: 'departamento' | 'Departamento';
   /** Nombre departamento */
-  departamento_nom: string;
+  depNom: 'departamento_nom' | 'Departamento_nom';
   /** Código DIVIPOLA municipio */
-  ciudad_municipio: number;
+  mun: 'ciudad_municipio' | 'Ciudad_municipio';
   /** Nombre municipio: Por seguridad de las personas, algunos datos serán limitados evitando así la exposición y posible identificación en determinados municipios. */
-  ciudad_municipio_nom: string;
+  munNom: 'ciudad_municipio_nom' | 'Ciudad_municipio_nom';
   /** Edad */
-  edad: string;
+  edad: 'edad' | 'Edad';
   /** 1-Años 2-Meses 3-Días */
-  unidad_medida: string;
+  unidadMedida: 'unidad_medida';
   /** Sexo */
-  sexo: string;
+  sexo: 'sexo' | 'Sexo';
   /** Tipo de contagio: "Relacionado", "Importado" o "En estudio Comunitario" - En los datos no es 'Comunitario' sino 'Comunitaria' */
-  fuente_tipo_contagio: string;
+  fuenteContagio: 'fuente_tipo_contagio' | 'Fuente_tipo_contagio';
   /** Ubicación del caso:  */
-  ubicacion: string;
+  ubicacion: 'ubicacion' | 'Ubicacion';
   /** Estado:  */
-  estado: string;
+  estado: 'estado' | 'Estado';
   /** Código ISO del país */
-  pais_viajo_1_cod: string;
+  pais: 'pais_viajo_1_cod' | 'Pais_viajo_1_cod';
   /** Nombre del país */
-  pais_viajo_1_nom: string;
+  paisNom: 'pais_viajo_1_nom' | 'Pais_viajo_1_nom';
   /**
    * "Recuperado", "Fallecido", "N/A" o (Vacío).
    * N/A se refiere a los fallecidos no COVID.
    * Pueden haber casos recuperados con ubicación Hospital u Hospital UCI, ya que permanecen en hospitalización por causas diferentes.
    * Los casos con información en blanco en esta columna corresponde a los casos activos.
    */
-  recuperado: string;
+  recuperado: 'recuperado' | 'Recuperado';
   /** Fecha de inicio de síntomas */
-  fecha_inicio_sintomas: string;
+  fechaSintomas: 'fecha_inicio_sintomas' | 'Fecha_inicio_sintomas';
   /** Fecha de muerte */
-  fecha_muerte: string;
+  fechaMuerte: 'fecha_muerte' | 'Fecha_muerte';
   /** Fecha de diagnostico: Fecha de confirmación por laboratorio */
-  fecha_diagnostico: string;
+  fechaDiag: 'fecha_diagnostico' | 'Fecha_diagnostico';
   /** Fecha de recuperación */
-  fecha_recuperado: string;
+  fechaRecuperado: 'fecha_recuperado' | 'Fecha_recuperado';
   /**
    * Tipo de recuperación
    *
@@ -109,7 +88,7 @@ export type CasoSoda = {
    * mientras que tiempo significa que son personas que cumplieron 30 días posteriores al inicio de síntomas o toma de muestras que no tienen síntomas,
    * que no tengan más de 70 años ni que estén hospitalizados.
    */
-  tipo_recuperacion: string;
+  tipoRecuperacion: 'tipo_recuperacion' | 'Tipo_recuperacion';
   /**
    * Pertenencia étnica: 1-Indígena 2-ROM 3-Raizal 4-Palenquero 5-Negro 6-Otro
    *
@@ -123,7 +102,7 @@ export type CasoSoda = {
    *
    * No depende del Instituto Nacional de Salud, y por lo tanto, es responsabilidad de las autoridades de cada municipio, departamento y distrito de Colombia; la calidad y consistencia de dicha variable.
    */
-  per_etn_: string;
+  perEtn: 'per_etn_';
   /**
    * Nombre del grupo étnico
    *
@@ -136,7 +115,7 @@ export type CasoSoda = {
    *
    * No depende del Instituto Nacional de Salud, y por lo tanto, es responsabilidad de las autoridades de cada municipio, departamento y distrito de Colombia; la calidad y consistencia de dicha variable
    */
-  nom_grupo_: string;
+  nomGrupo: 'nom_grupo_';
 };
 
 export type Departamento = [codigo: string, nombre: string, latitud: number, longitud: number];

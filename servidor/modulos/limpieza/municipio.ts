@@ -1,5 +1,5 @@
 import errata from '../errata';
-import { CasoSoda, LlavesCaso, Municipio } from '../../tipos';
+import { CasoFuente, LlavesCaso, Municipio } from '../../tipos';
 import { esIgual, esNumero, existeEn, igualAprox, normalizarTexto } from '../../utilidades/ayudas';
 import { municipios } from '../../utilidades/lugaresColombia';
 
@@ -15,7 +15,7 @@ function validarSinCodigoConNombre(nombreNormalizado: string, codigo: string): M
   return;
 }
 
-export default (caso: CasoSoda, llaves: LlavesCaso) => {
+export default (caso: CasoFuente, llaves: LlavesCaso) => {
   const llaveId = llaves.id;
   let codigo = caso[llaves.mun] as string;
   let nombre = caso[llaves.munNom] as string;

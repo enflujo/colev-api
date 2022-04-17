@@ -1,11 +1,11 @@
 import errata from '../errata';
-import { Caso, CasoSoda, LlavesCaso } from '../../tipos';
+import { CasoLimpio, CasoFuente, LlavesCaso } from '../../tipos';
 import { esNumero, fechaColombia, normalizarTexto } from '../../utilidades/ayudas';
 import limpiarDepartamento from './departamento';
 import limpiarMunicipio from './municipio';
 import limpiarPais from './pais';
 
-function limpiarId(caso: CasoSoda, llaves: LlavesCaso): number | undefined {
+function limpiarId(caso: CasoFuente, llaves: LlavesCaso): number | undefined {
   const llaveId = llaves.id;
   let id = caso[llaveId] as string;
 
@@ -20,7 +20,7 @@ function limpiarId(caso: CasoSoda, llaves: LlavesCaso): number | undefined {
   return;
 }
 
-function limpiarFecha(caso: CasoSoda, llave: keyof CasoSoda, llaves: LlavesCaso): Date | undefined {
+function limpiarFecha(caso: CasoFuente, llave: keyof CasoFuente, llaves: LlavesCaso): Date | undefined {
   let fecha = caso[llave] as string;
 
   if (fecha) {
@@ -32,7 +32,7 @@ function limpiarFecha(caso: CasoSoda, llave: keyof CasoSoda, llaves: LlavesCaso)
   return;
 }
 
-function limpiarEdad(caso: CasoSoda, llaves: LlavesCaso): number | undefined {
+function limpiarEdad(caso: CasoFuente, llaves: LlavesCaso): number | undefined {
   let edad = caso[llaves.edad] as string;
   let unidadMedida = caso[llaves.unidadMedida] as string;
 
@@ -70,7 +70,7 @@ function limpiarEdad(caso: CasoSoda, llaves: LlavesCaso): number | undefined {
   return;
 }
 
-function limpiarRecuperado(caso: CasoSoda, llaves: LlavesCaso): string | undefined {
+function limpiarRecuperado(caso: CasoFuente, llaves: LlavesCaso): string | undefined {
   let recuperado = caso[llaves.recuperado] as string;
 
   if (recuperado) {
@@ -89,7 +89,7 @@ function limpiarRecuperado(caso: CasoSoda, llaves: LlavesCaso): string | undefin
   return;
 }
 
-function limpiarRecuperacion(caso: CasoSoda, llaves: LlavesCaso) {
+function limpiarRecuperacion(caso: CasoFuente, llaves: LlavesCaso) {
   let tipo = caso[llaves.tipoRecuperacion] as string;
 
   if (tipo) {
@@ -106,7 +106,7 @@ function limpiarRecuperacion(caso: CasoSoda, llaves: LlavesCaso) {
   return;
 }
 
-function limpiarSexo(caso: CasoSoda, llaves: LlavesCaso): string | undefined {
+function limpiarSexo(caso: CasoFuente, llaves: LlavesCaso): string | undefined {
   let sexo = caso[llaves.sexo] as string;
 
   if (sexo) {
@@ -122,7 +122,7 @@ function limpiarSexo(caso: CasoSoda, llaves: LlavesCaso): string | undefined {
   return;
 }
 
-function limpiarPerEtnica(caso: CasoSoda, llaves: LlavesCaso): number | undefined {
+function limpiarPerEtnica(caso: CasoFuente, llaves: LlavesCaso): number | undefined {
   let codigo = caso[llaves.perEtn] as string;
 
   if (codigo) {
@@ -135,7 +135,7 @@ function limpiarPerEtnica(caso: CasoSoda, llaves: LlavesCaso): number | undefine
   return;
 }
 
-function limpiarFuenteContagio(caso: CasoSoda, llaves: LlavesCaso): string | undefined {
+function limpiarFuenteContagio(caso: CasoFuente, llaves: LlavesCaso): string | undefined {
   let fuente = caso[llaves.fuenteContagio] as string;
   if (fuente) {
     fuente = fuente.trim();
@@ -152,7 +152,7 @@ function limpiarFuenteContagio(caso: CasoSoda, llaves: LlavesCaso): string | und
   return;
 }
 
-function limpiarNombreGrupo(caso: CasoSoda, llaves: LlavesCaso): string | undefined {
+function limpiarNombreGrupo(caso: CasoFuente, llaves: LlavesCaso): string | undefined {
   let nombre = caso[llaves.nomGrupo] as string;
 
   if (nombre) {
@@ -164,11 +164,11 @@ function limpiarNombreGrupo(caso: CasoSoda, llaves: LlavesCaso): string | undefi
   return;
 }
 
-export default (caso: CasoSoda, llaves: LlavesCaso): Caso | undefined => {
+export default (caso: CasoFuente, llaves: LlavesCaso): CasoLimpio | undefined => {
   const id = limpiarId(caso, llaves);
 
   if (id) {
-    const res: Caso = {
+    const res: CasoLimpio = {
       _id: id,
     };
 

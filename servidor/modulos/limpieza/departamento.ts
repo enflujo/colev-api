@@ -1,5 +1,5 @@
 import errata from '../errata';
-import { CasoSoda, Departamento, LlavesCaso, Municipio } from '../../tipos';
+import { CasoFuente, Departamento, LlavesCaso, Municipio } from '../../tipos';
 import { esIgual, esNumero, existeEn, igualAprox, normalizarTexto } from '../../utilidades/ayudas';
 import { departamentos, municipios } from '../../utilidades/lugaresColombia';
 
@@ -60,7 +60,7 @@ function validarDepSinCodigoConNombre(
   return;
 }
 
-export default (caso: CasoSoda, llaves: LlavesCaso): Departamento | undefined => {
+export default (caso: CasoFuente, llaves: LlavesCaso): Departamento | undefined => {
   const llaveCodigo = llaves.dep;
   const llaveNombre = llaves.depNom;
   const llaveId = llaves.id;
