@@ -7,7 +7,7 @@ import { carpetaTemporales, aviso, cyan, cadena } from './utilidades/constantes.
 import { totalCasosUrl, ultimoCasoIdUrl } from './utilidades/ayudas.js';
 import axios from 'axios';
 
-const PUERTO = 8080;
+const PUERTO = process.env.API_PUERTO || 8080;
 
 const servidor = fastify();
 servidor.register(cors);
