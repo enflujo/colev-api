@@ -9,7 +9,7 @@ import { guardarVarios, desconectarBd } from '../baseDeDatos';
 import { MongoError } from 'mongodb';
 import barraProceso from '../../utilidades/barraProceso';
 
-const iniciarEnPg = 304;
+const iniciarEnPg = 0;
 /**
  * Extracción de los datos por medio de la API de Datos Abiertos: https://www.datos.gov.co/resource/gt2j-8ykr
  * Hace varias peticiones a la API para ir extrayendo y guardando en la base de datos sin saturar la memoria RAM.
