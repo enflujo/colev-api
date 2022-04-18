@@ -1,56 +1,10 @@
 import { MongoClient } from 'mongodb';
-import Keyv from 'keyv';
-import KeyvRedis from '@keyv/redis';
 import axios from 'axios';
-import ms from 'ms';
 import { puntoDatos } from './constantes.js';
-const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO, TOKEN } = process.env;
-
-const cache = new Keyv({
-  store: new KeyvRedis(`redis://localhost:${CACHE_PUERTO}`),
-  ttl: ms('10s'),
-  namespace: 'colev-api-cache',
-});
+const { BD_USUARIO, BD_CLAVE, BD_PUERTO, TOKEN } = process.env;
 
 const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
 const config = { nombreBD: 'covid19', coleccionCasos: 'casos', coleccionGeneral: 'general', administrador: null };
-
-export const casosPorDia = async () => {
-  const id = 'casosPorDia';
-  let datos;
-
-  if (USAR_CACHE === 'true') datos = await cache.get(id);
-
-  if (!datos) {
-    const casos = await config.administrador
-      .aggregate([
-        {
-          $group: {
-            _id: '$fecha_not',
-            total: { $sum: 1 },
-            muertos: {
-              $sum: {
-                $cond: [{ $eq: ['$recuperado', 'Fallecido'] }, 1, 0],
-              },
-            },
-          },
-        },
-        {
-          $sort: { _id: 1 },
-        },
-      ])
-      .toArray();
-
-    datos = {
-      llaves: ['fecha', 'muertos', 'total'],
-      casos: casos.map((obj) => [obj._id, obj.muertos, obj.total]),
-    };
-
-    cache.set(id, datos);
-  }
-
-  return datos;
-};
 
 export const muertos = async () => {
   const muertos = await config.administrador

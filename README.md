@@ -45,3 +45,5 @@ servidor.get('/descriptores', async (request, reply) => {
   return JSON.parse(descriptores);
 });
 ```
+
+Revisar 1 caso por id: https://www.datos.gov.co/resource/gt2j-8ykr.json?id_de_caso=5666290

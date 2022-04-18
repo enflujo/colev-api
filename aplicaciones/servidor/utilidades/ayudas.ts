@@ -95,3 +95,19 @@ export const reloj = (ms: number): string =>
     minute: '2-digit',
     second: '2-digit',
   });
+
+export const formatearNombre = (texto: string) => {
+  const palabras = texto.trim().toLowerCase().split(' ');
+  const saltar = ['de', 'la'];
+  const mantener = ['D.C.'];
+
+  return palabras
+    .map((palabra, i) => {
+      if ((saltar.includes(palabra) && i > 0) || mantener.includes(palabra)) {
+        return palabra;
+      }
+
+      return palabra[0].toUpperCase() + palabra.substring(1);
+    })
+    .join(' ');
+};

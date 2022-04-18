@@ -30,6 +30,7 @@ export default {
   <div :class="this.extraccion.error ? 'error' : ''" class="mensaje">
     <h3>{{ this.extraccion.error }}</h3>
     {{ this.extraccion.mensaje }}
+    hola
   </div>
 </template>
 

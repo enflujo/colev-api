@@ -84,6 +84,7 @@ function limpiarRecuperado(caso: CasoFuente, llaves: LlavesCaso): string | undef
     }
 
     errata.recuperado.add(`Caso ${caso[llaves.id]} contiene un valor que no se puede validar: ${recuperado}`);
+    return;
   }
   errata.recuperado.add(`Caso ${caso[llaves.id]} no tiene campo de recuperado`);
   return;

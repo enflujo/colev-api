@@ -12,18 +12,19 @@ function formatoBarra(opciones: ProgressOptions, params: ProgressParams, payload
     const seccionIncompleta = opciones.barIncompleteString || '-';
     const barra = seccionCompleta.substring(0, completado) + seccionIncompleta.substring(0, ancho - completado);
     const paginas = `página: ${payload.pagina} de ${payload.totalPaginas}`;
-    const cola = `${((value / total) * 100).toFixed(1)}% | ${reloj(Date.now() - startTime)}`;
+    const cola = `${paginas} | ${((value / total) * 100).toFixed(1)}% | ${reloj(Date.now() - startTime)}`;
 
     if (!payload.terminado) {
       if (value >= total) {
         return `${logBloque(conector)} ${logAviso('Procesando errata')} |${logNaranjaPulso(barra)}| ${cola}`;
       } else {
-        return `${logBloque(gorila)} ${logAviso('Procesando')} |${logCyan(barra)}| ${paginas} | ${cola}`;
+        return `${logBloque(gorila)} ${logAviso('Procesando')} |${logCyan(barra)}| ${cola}`;
       }
     }
 
     return `${chulo} ${logAviso('Archivo procesado')} |${logVerde(barra)}| ${cola}`;
   }
+
   return '';
 }
 
@@ -31,5 +32,6 @@ export default new SingleBar({
   format: formatoBarra,
   barCompleteChar: '\u2588',
   barIncompleteChar: '\u2591',
+  // forceRedraw: true,
   hideCursor: true,
 });

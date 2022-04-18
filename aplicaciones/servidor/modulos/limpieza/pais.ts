@@ -1,8 +1,7 @@
 import errata from '../errata';
 import { CasoFuente, LlavesCaso, Pais } from '../../tipos';
 import { esIgual, esNumero, existeEn, igualAprox, normalizarTexto } from '../../utilidades/ayudas';
-
-const datosPaises: Pais[] = require('../../../node_modules/world_countries_lists/data/countries/es/world.json');
+import datosPaises from 'world_countries_lists/data/countries/es/world.json';
 
 export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
   let codigo = caso[llaves.pais] as string;

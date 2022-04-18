@@ -9,7 +9,7 @@ import { guardarVarios, desconectarBd } from '../baseDeDatos';
 import { MongoError } from 'mongodb';
 import barraProceso from '../../utilidades/barraProceso';
 
-const iniciarEnPg = 0;
+const iniciarEnPg = 304;
 /**
  * Extracción de los datos por medio de la API de Datos Abiertos: https://www.datos.gov.co/resource/gt2j-8ykr
  * Hace varias peticiones a la API para ir extrayendo y guardando en la base de datos sin saturar la memoria RAM.
@@ -48,7 +48,7 @@ export default async function extraer(total: number, pagina = iniciarEnPg) {
         });
       } catch (err) {
         console.error(logError(err));
-        throw new Error(JSON.stringify(err, null, 2));
+        // throw new Error(JSON.stringify(err, null, 2));
       }
 
       const casosProcesados = inicioBloque + data.length;
@@ -67,10 +67,14 @@ export default async function extraer(total: number, pagina = iniciarEnPg) {
 
       extraer(total, pagina + 1);
     } else {
-      guardarJSON(errata, 'errata');
-
+      guardarJSON(errata, 'errata2');
       // await actualizarUltimoId();
-      await desconectarBd();
+      try {
+        await desconectarBd();
+      } catch (err) {
+        console.log(logError(err));
+      }
+
       barraProceso.update(total, { terminado: true });
       barraProceso.stop();
       return;

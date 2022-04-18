@@ -3,10 +3,9 @@
 basededatos/
 .temporales/
 datos/*
-!datos/descriptores.js
-!datos/lugaresColombia.js
 cache
 api
+www
 
 # Logs
 logs

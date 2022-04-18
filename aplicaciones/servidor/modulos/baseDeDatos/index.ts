@@ -2,7 +2,7 @@ import { Db, MongoClient } from 'mongodb';
 import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import ms from 'ms';
-import { Caso, CasoPorDia, DatosCasosPorDia } from '../../tipos';
+import { CasoLimpio, CasoPorDia, DatosCasosPorDia } from '../../tipos';
 
 const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO, TOKEN } = process.env;
 const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
@@ -16,7 +16,7 @@ const nombreBd = 'covid19';
 const nombreColeccion = 'casos';
 let bd: Db | null = null;
 
-export const desconectarBd = async () => {
+export const desconectarBd = async (): Promise<void> => {
   await cliente.close();
   bd = null;
 };
@@ -29,11 +29,11 @@ export const conectarBd = async (): Promise<Db> => {
   return bd;
 };
 
-export const guardarVarios = async (datos: Caso[]) => {
+export const guardarVarios = async (datos: CasoLimpio[]): Promise<void> => {
   await conectarBd();
 
   if (bd) {
-    const entradas = datos.map((caso: Caso) => {
+    const entradas = datos.map((caso: CasoLimpio) => {
       return {
         updateOne: {
           filter: { _id: caso._id },
