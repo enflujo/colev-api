@@ -10,11 +10,20 @@ services:
     volumes:
       - ./basededatos:/data/db
     ports:
-      - 27017:27017
+      - ${BD_PUERTO}:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${BD_USUARIO}
       MONGO_INITDB_ROOT_PASSWORD: ${BD_CLAVE}
       MONGO_INITDB_DATABASE: covid
+
+  cache:
+    container_name: colev-api-cache
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    networks:
+      - colev-api
+    ports:
+      - ${CACHE_PUERTO}:6379
 
   mongo-express:
     container_name: colev-api-mongoexpress
@@ -26,6 +35,7 @@ services:
       - 8081:8081
     depends_on:
       - bd
+      - cache
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${BD_USUARIO}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${BD_CLAVE}
