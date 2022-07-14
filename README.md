@@ -61,3 +61,25 @@ servidor.get('/descriptores', async (request, reply) => {
 ```
 
 Revisar 1 caso por id: https://www.datos.gov.co/resource/gt2j-8ykr.json?id_de_caso=5666290
+
+### Agregar paquetes a las aplicaciones
+
+Este repositorio contiene varias aplicaciones usando Yarn Worspaces. Para instalar paquetes de NPM se debe dirigir a la aplicación que le corresponde. Por ejemplo:
+
+Este comando...
+
+```bash
+yarn add ...
+```
+
+Se vuelve esto para instalar un paquete a la aplicación llamada `servidor`
+
+```bash
+ yarn workspace servidor add ...
+```
+
+Y este para la aplicación `sitio`
+
+```bash
+ yarn workspace sitio add ...
+```
