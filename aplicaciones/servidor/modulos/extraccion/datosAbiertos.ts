@@ -67,7 +67,7 @@ export default async function extraer(total: number, pagina = iniciarEnPg) {
 
       extraer(total, pagina + 1);
     } else {
-      guardarJSON(errata, 'errata2');
+      guardarJSON(errata, 'errata');
       // await actualizarUltimoId();
       try {
         await desconectarBd();

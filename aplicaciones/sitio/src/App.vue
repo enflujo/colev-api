@@ -1,24 +1,19 @@
 <script setup>
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
+import { ref } from 'vue';
 import HelloWorld from './components/HelloWorld.vue';
 const servidorUrl = 'http://localhost:8080';
-const muertos = [];
-const extraccion = {};
-</script>
+const muertos = ref([]);
+const extraccion = ref(null);
 
-<script>
-export default {
-  methods: {
-    async obtenerMuertos() {
-      this.muertos = await fetch(this.servidorUrl).then((respuesta) => respuesta.json());
-    },
+async function obtenerMuertos() {
+  muertos.value = await fetch(servidorUrl).then((respuesta) => respuesta.json());
+}
 
-    async extraer() {
-      this.extraccion = await fetch(`${this.servidorUrl}/extraer`).then((respuesta) => respuesta.json());
-    },
-  },
-};
+async function extraer() {
+  extraccion.value = await fetch(`${servidorUrl}/extraer`).then((respuesta) => respuesta.json());
+}
 </script>
 
 <template>
@@ -27,10 +22,9 @@ export default {
   <button @click="obtenerMuertos">Muertos</button>
   <button @click="extraer">Extrear</button>
 
-  <div :class="this.extraccion.error ? 'error' : ''" class="mensaje">
-    <h3>{{ this.extraccion.error }}</h3>
-    {{ this.extraccion.mensaje }}
-    hola
+  <div v-if="extraccion" :class="extraccion.error ? 'error' : ''" class="mensaje">
+    <h3>{{ extraccion.error }}</h3>
+    {{ extraccion.mensaje }}
   </div>
 </template>
 

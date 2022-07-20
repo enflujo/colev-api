@@ -3,6 +3,7 @@
 basededatos/
 .temporales/
 datos/*
+!datos/.gitkeep
 cache
 api
 www

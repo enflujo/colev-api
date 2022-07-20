@@ -4,7 +4,7 @@ import KeyvRedis from '@keyv/redis';
 import ms from 'ms';
 import { CasoLimpio, CasoPorDia, DatosCasosPorDia } from '../../tipos';
 
-const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO, TOKEN } = process.env;
+const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO } = process.env;
 const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
 const cache = new Keyv({
   store: new KeyvRedis(`redis://localhost:${CACHE_PUERTO}`),
@@ -12,8 +12,13 @@ const cache = new Keyv({
   namespace: 'colev-api-cache',
 });
 
-const nombreBd = 'covid19';
-const nombreColeccion = 'casos';
+const nombreBd = 'colev';
+const colecciones = {
+  casos: 'casos',
+  twitterTweets: 'tweets',
+  twitterLugares: 'tweeter-lugares',
+};
+
 let bd: Db | null = null;
 
 export const desconectarBd = async (): Promise<void> => {
@@ -43,7 +48,7 @@ export const guardarVarios = async (datos: CasoLimpio[]): Promise<void> => {
       };
     });
 
-    const coleccion = bd.collection(nombreColeccion);
+    const coleccion = bd.collection(colecciones.casos);
     await coleccion.bulkWrite(entradas);
   }
 };
@@ -82,7 +87,7 @@ export const casosPorDia = async (): Promise<DatosCasosPorDia | undefined> => {
     // Asegurarse que se pudo conectar a mongo.
     if (bd) {
       // Definir desde cual colección se extraen los datos.
-      const coleccion = bd.collection(nombreColeccion);
+      const coleccion = bd.collection(colecciones.casos);
 
       // Query
       const casos = (await coleccion

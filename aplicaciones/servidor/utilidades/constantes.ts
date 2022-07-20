@@ -24,8 +24,8 @@ export const chulo = emoji.emojify(':white_check_mark:');
  */
 export const puntoDatos = 'https://www.datos.gov.co/resource/gt2j-8ykr';
 
-export const totalCasosUrl = () => `${puntoDatos}.json?$$app_token=${process.env.TOKEN}&$select=count(id_de_caso)`;
-export const ultimoCasoIdUrl = () => `${puntoDatos}.json?$$app_token=${process.env.TOKEN}&$select=max(id_de_caso)`;
+export const totalCasosUrl = `${puntoDatos}.json?$$app_token=${process.env.TOKEN}&$select=count(id_de_caso)`;
+export const ultimoCasoIdUrl = `${puntoDatos}.json?$$app_token=${process.env.TOKEN}&$select=max(id_de_caso)`;
 
 /**
  * Crea la URL para pedir datos según cantidad de items y página.

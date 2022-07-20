@@ -2,7 +2,7 @@ import 'dotenv/config';
 import fastify, { FastifyInstance } from 'fastify';
 import cors from 'fastify-cors';
 import axios, { AxiosError } from 'axios';
-import { logAviso, logCyan, cadena, totalCasosUrl } from './utilidades/constantes';
+import { logAviso, logCyan, cadena, totalCasosUrl, ultimoCasoIdUrl } from './utilidades/constantes';
 import datosAbiertos from './modulos/extraccion/datosAbiertos';
 import * as bd from './modulos/baseDeDatos';
 
@@ -19,7 +19,9 @@ servidor.get('/', async (request, reply) => {
 
 servidor.get('/extraer', async (request, reply) => {
   try {
-    const { data } = await axios(totalCasosUrl());
+    const { data } = await axios(totalCasosUrl);
+    const ultimoCaso = await axios(ultimoCasoIdUrl);
+    console.log(ultimoCaso.data, data);
 
     if (data && data.length && data[0].count_id_de_caso) {
       const totalCasos = +data[0].count_id_de_caso;

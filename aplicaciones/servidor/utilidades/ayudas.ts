@@ -3,6 +3,7 @@ import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 import { writeFileSync } from 'fs';
 import { ratio } from 'fuzzball';
+import path from 'path';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -79,7 +80,7 @@ export const convertirSet = (key: string, value: any) => (value instanceof Set ?
  * @param {String} nombre Nombre del archivo, resulta en ${nombre}.json
  */
 export const guardarJSON = (json: Object, nombre: string) => {
-  writeFileSync(`./datos/${nombre}.json`, JSON.stringify(json, convertirSet, 2));
+  writeFileSync(path.resolve(__dirname, `../../datos/${nombre}.json`), JSON.stringify(json, convertirSet, 2));
 };
 
 /**
