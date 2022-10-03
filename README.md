@@ -83,3 +83,8 @@ Y este para la aplicación `sitio`
 ```bash
  yarn workspace sitio add ...
 ```
+
+- paleta de color
+- hover mostrar tiempo
+- mostrar porcentaje o valor que le da el tamaño a las palabras
+-

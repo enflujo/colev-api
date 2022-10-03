@@ -54,7 +54,7 @@ export default async function extraer(total: number, pagina = iniciarEnPg) {
       const casosProcesados = inicioBloque + data.length;
 
       try {
-        await guardarVarios(datosLimpios);
+        await guardarVarios(datosLimpios, 'casos');
       } catch (err) {
         const error = err as MongoError;
         console.log(logError(`Error en instancia de MongoDB: ${error.code}`, error.message));

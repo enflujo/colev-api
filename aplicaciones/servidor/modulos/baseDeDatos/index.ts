@@ -13,6 +13,7 @@ const cache = new Keyv({
 });
 
 const nombreBd = 'colev';
+
 const colecciones = {
   casos: 'casos',
   twitterTweets: 'tweets',
@@ -34,7 +35,26 @@ export const conectarBd = async (): Promise<Db> => {
   return bd;
 };
 
-export const guardarVarios = async (datos: CasoLimpio[]): Promise<void> => {
+export const guardarBasicosTweeter = async (datos: any): Promise<void> => {
+  await conectarBd();
+
+  if (bd) {
+    const entradas = datos.map((tweet: any) => {
+      return {
+        updateOne: {
+          filter: { _id: tweet.id },
+          update: { $set: tweet },
+          upsert: true,
+        },
+      };
+    });
+
+    const coleccion = bd.collection('tweets');
+    await coleccion.bulkWrite(entradas);
+  }
+};
+
+export const guardarVarios = async (datos: CasoLimpio[], nombreColeccion: string): Promise<void> => {
   await conectarBd();
 
   if (bd) {
@@ -48,7 +68,7 @@ export const guardarVarios = async (datos: CasoLimpio[]): Promise<void> => {
       };
     });
 
-    const coleccion = bd.collection(colecciones.casos);
+    const coleccion = bd.collection(nombreColeccion);
     await coleccion.bulkWrite(entradas);
   }
 };
@@ -121,6 +141,97 @@ export const casosPorDia = async (): Promise<DatosCasosPorDia | undefined> => {
         console.log('mongo');
         return datos;
       }
+    }
+  }
+
+  return datos;
+};
+
+export const tweetsPorHora = async (): Promise<any | undefined> => {
+  // Este id se usa para buscar en el caché o guardar el resultado de mongo.
+  const id = 'tweetsPorHora';
+
+  // Definir variable de datos que pueden salir del caché o de mongo.
+  let datos: any | undefined;
+
+  // USAR_CACHE se define en el archivo .env para poderlo desactivar con facilidad.
+  if (USAR_CACHE === 'true') {
+    // Acá están los datos guardados si no ha pasado el tiempo que se define en ttl y ya se guardó el resultado con este id.
+    const datosGuardados = await cache.get(id);
+
+    if (datosGuardados) {
+      datos = JSON.parse(datosGuardados);
+      console.log('cache');
+    }
+  }
+
+  // Si no encontró nada en el caché, hace el query en mongo.
+  if (!datos) {
+    await conectarBd();
+
+    // Asegurarse que se pudo conectar a mongo.
+    if (bd) {
+      // Definir desde cual colección se extraen los datos.
+      const coleccion = bd.collection(colecciones.twitterTweets);
+      const respuesta = await coleccion
+        .aggregate([
+          {
+            $project: {
+              a: { $year: { $toDate: '$created_at' } },
+              m: { $month: { $toDate: '$created_at' } },
+              d: { $dayOfMonth: { $toDate: '$created_at' } },
+              h: { $hour: { $toDate: '$created_at' } },
+              fecha: { $toDate: '$created_at' },
+              tweet: 1,
+            },
+          },
+          {
+            $group: {
+              _id: { año: '$a', mes: '$m', dia: '$d', hora: '$h' },
+              fecha: { $first: '$fecha' },
+              total: { $sum: 1 },
+            },
+          },
+          {
+            $sort: { fecha: 1 },
+          },
+        ])
+        .toArray();
+
+      datos = respuesta;
+      // Query
+      // const tweetsPorHora: any = await coleccion
+      //   .aggregate([
+      //     {
+      //       $project: {
+      //         a: {$year: '$created_at'},
+      //         m: {$month: '$created_at'},
+      //         d: {$dayOfMonth: '$created_at'},
+      //         h: {$hour: '$created_at'},
+      //         tweet: 1,
+      //       },
+      //       {
+      //         $group: {
+      //           _id: { "year":"$y","month":"$m","day":"$d","hour":"$h"},
+      //           count: {$sum: 1}
+      //         }
+      //       }
+      //     },
+      //   ]).toArray() as any;
+      //   console.log(tweetsPorHora);
+      //   datos = tweetsPorHora;
+      // Aplanar respuesta de objetos a arrays para que sea la menor cantidad de bits que se mandan desde la API.
+      // if (tweetsPorHora && casos.length) {
+      //   datos = {
+      //     llaves: ['fecha', 'muertos', 'total'],
+      //     casos: casos.map((obj: ObjetoCaso): CasoPorDia => [obj._id, obj.muertos, obj.total]),
+      //   };
+
+      //   // Guardar el resultado en caché para que estén disponibles en los siguientes llamados a esta función.
+      //   cache.set(id, JSON.stringify(datos));
+      //   console.log('mongo');
+      //   return datos;
+      // }
     }
   }
 
