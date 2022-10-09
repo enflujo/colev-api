@@ -16,16 +16,18 @@
     "dev:www": "yarn workspace sitio dev",
     "build": "yarn build:api && yarn build:www",
     "build:api": "yarn workspace servidor build",
-    "build:www": "yarn workspace sitio build"
+    "build:www": "yarn workspace sitio build",
+    "ins": "yarn workspace tally ins",
+    "twitter": "yarn workspace tally twitter"
   },
   "dependencies": {
-    "dayjs": "^1.11.1",
-    "filesize": "^8.0.7",
-    "world_countries_lists": "^2.5.0"
+    "dayjs": "^1.11.5",
+    "filesize": "^10.0.5",
+    "world_countries_lists": "^2.6.0"
   },
   "devDependencies": {
-    "concurrently": "^7.1.0",
-    "prettier": "^2.6.2"
+    "concurrently": "^7.4.0",
+    "prettier": "^2.7.1"
   },
   "nodemonConfig": {
     "ignore": [
