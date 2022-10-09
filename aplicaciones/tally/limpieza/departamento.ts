@@ -4,6 +4,7 @@ import { esIgual, esNumero, existeEn, igualAprox, normalizarTexto } from '../uti
 import { departamentos, municipios } from '../utilidades/lugaresColombia';
 
 const deps = departamentos.datos;
+const produccion = process.env.NODE_ENV === 'produccion';
 
 function validarDepPorNombres(nombre: string, nombreNormalizado: string, arrDep: Departamento): boolean {
   const nombreNormalizado2 = normalizarTexto(arrDep[1]);
@@ -13,13 +14,18 @@ function validarDepPorNombres(nombre: string, nombreNormalizado: string, arrDep:
 
   // Si el nombre de referencia es parte del nombre en caso.
   if (existeEn(nombreNormalizado2, nombreNormalizado)) {
-    errata.departamentos.add(`${nombre}->${arrDep[1]}`);
+    if (!produccion) {
+      errata.departamentos.add(`${nombre}->${arrDep[1]}`);
+    }
+
     return true;
   }
 
   // Usar fuzz para obtener un porcentaje de similitud (útil cuando hay errores tipográficos o de digitación)
   if (igualAprox(nombreNormalizado, nombreNormalizado2)) {
-    errata.departamentos.add(`${nombre}->${arrDep[1]}`);
+    if (!produccion) {
+      errata.departamentos.add(`${nombre}->${arrDep[1]}`);
+    }
     return true;
   }
 
@@ -35,7 +41,9 @@ function validarDepSinCodigoConNombre(
   const existePorNombre = deps.find((d: Departamento) => normalizarTexto(d[1]) === nombreNormalizado);
 
   if (existePorNombre) {
-    errata.departamentos.add(`${codigo}->${existePorNombre[0]} (${existePorNombre[1]})`);
+    if (!produccion) {
+      errata.departamentos.add(`${codigo}->${existePorNombre[0]} (${existePorNombre[1]})`);
+    }
     return existePorNombre;
   }
 
@@ -51,7 +59,9 @@ function validarDepSinCodigoConNombre(
     const dep = deps.find((d: Departamento) => d[0] === codigoDepEnMunicipio);
 
     if (dep) {
-      errata.departamentos.add(`${codigo}->${codigoDepEnMunicipio} (${nombre}->${dep[1]})`);
+      if (!produccion) {
+        errata.departamentos.add(`${codigo}->${codigoDepEnMunicipio} (${nombre}->${dep[1]})`);
+      }
       return dep;
     }
     return;
@@ -86,9 +96,11 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Departamento | undefined 
         if (esValido) return arrDep;
 
         // No pasó ninguna prueba, registrar el problema en errata.
-        errata.departamentos.add(
-          `En el caso ${caso[llaveId]} no hay manera de encontrar el departamento: ${nombre} con código: ${codigo}`
-        );
+        if (!produccion) {
+          errata.departamentos.add(
+            `En el caso ${caso[llaveId]} no hay manera de encontrar el departamento: ${nombre} con código: ${codigo}`
+          );
+        }
         return;
       } else {
         /**
@@ -103,7 +115,9 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Departamento | undefined 
           const dep = deps.find((d: Departamento) => d[0] === posibleCodigo);
 
           if (dep && dep.length) {
-            errata.departamentos.add(`${codigo}->${posibleCodigo} (${nombre}->${dep[1]})`);
+            if (!produccion) {
+              errata.departamentos.add(`${codigo}->${posibleCodigo} (${nombre}->${dep[1]})`);
+            }
             return dep;
           }
 
@@ -119,9 +133,11 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Departamento | undefined 
         if (depCorregido) return depCorregido;
 
         // En este punto el código existe, es numérico, pero no se puede validar.
-        errata.departamentos.add(
-          `No se pudo validar el departamento en caso ${caso[llaveId]} con código: ${codigo} y nombre: ${nombre}`
-        );
+        if (!produccion) {
+          errata.departamentos.add(
+            `No se pudo validar el departamento en caso ${caso[llaveId]} con código: ${codigo} y nombre: ${nombre}`
+          );
+        }
         return;
       }
     } else {
@@ -131,10 +147,11 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Departamento | undefined 
 
       const depCorregido = validarDepSinCodigoConNombre(nombre, nombreNormalizado, codigo);
       if (depCorregido) return depCorregido;
-
-      errata.departamentos.add(
-        `No se pudo validar el departamento en caso ${caso[llaveId]}, el código no es numérico: ${codigo} y nombre: ${nombre}`
-      );
+      if (!produccion) {
+        errata.departamentos.add(
+          `No se pudo validar el departamento en caso ${caso[llaveId]}, el código no es numérico: ${codigo} y nombre: ${nombre}`
+        );
+      }
       return;
     }
   } else if (codigo) {
@@ -145,7 +162,9 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Departamento | undefined 
       const arrDep = deps.find((dep: Departamento) => +dep[0] === +codigo);
 
       if (arrDep) {
-        errata.departamentos.add(`null->${arrDep[1]}`);
+        if (!produccion) {
+          errata.departamentos.add(`null->${arrDep[1]}`);
+        }
         return arrDep;
       }
 
@@ -155,19 +174,25 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Departamento | undefined 
         const dep = deps.find((d: Departamento) => d[0] === posibleCodigo);
 
         if (dep) {
-          errata.departamentos.add(`null->${dep[1]}`);
+          if (!produccion) {
+            errata.departamentos.add(`null->${dep[1]}`);
+          }
           return dep;
         }
 
-        errata.departamentos.add(
-          `Caso ${caso[llaveId]} tiene código de departamento ${codigo} que parece de municipio, pero ${posibleCodigo} no coincide con ningún departamento`
-        );
+        if (!produccion) {
+          errata.departamentos.add(
+            `Caso ${caso[llaveId]} tiene código de departamento ${codigo} que parece de municipio, pero ${posibleCodigo} no coincide con ningún departamento`
+          );
+        }
         return;
       }
 
-      errata.departamentos.add(
-        `No se pudo validar el departamento en caso ${caso[llaveId]} con código: ${codigo} y sin nombre`
-      );
+      if (!produccion) {
+        errata.departamentos.add(
+          `No se pudo validar el departamento en caso ${caso[llaveId]} con código: ${codigo} y sin nombre`
+        );
+      }
       return;
     }
   } else if (nombre) {
@@ -177,15 +202,19 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Departamento | undefined 
     const depCorregido = validarDepSinCodigoConNombre(nombre, normalizarTexto(nombre), codigo) as Departamento;
     if (depCorregido) return depCorregido;
 
-    errata.departamentos.add(
-      `No se pudo validar el departamento: ${nombre} en caso ${caso[llaveId]} y no tiene código`
-    );
+    if (!produccion) {
+      errata.departamentos.add(
+        `No se pudo validar el departamento: ${nombre} en caso ${caso[llaveId]} y no tiene código`
+      );
+    }
     return;
   }
 
   /**
    * No tiene ninguno de los campos.
    */
-  errata.departamentos.add(`Caso ${caso[llaveId]} no tiene campos para validar departamento.`);
+  if (!produccion) {
+    errata.departamentos.add(`Caso ${caso[llaveId]} no tiene campos para validar departamento.`);
+  }
   return;
 };

@@ -3,6 +3,8 @@ import { CasoFuente, LlavesCaso, Pais } from '../tipos';
 import { esIgual, esNumero, existeEn, igualAprox, normalizarTexto } from '../utilidades/ayudas';
 import datosPaises from 'world_countries_lists/data/countries/es/world.json';
 
+const produccion = process.env.NODE_ENV === 'produccion';
+
 export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
   let codigo = caso[llaves.pais] as string;
   let nombre = caso[llaves.paisNom] as string;
@@ -19,15 +21,21 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
     const paisPorNombre = datosPaises.find((p: Pais) => normalizarTexto(p.name) === normalizarTexto(nombre));
 
     if (paisPorNombre) {
-      errata.paises.add(`null->${paisPorNombre.id} (${nombre}->${paisPorNombre})`);
+      if (!produccion) {
+        errata.paises.add(`null->${paisPorNombre.id} (${nombre}->${paisPorNombre})`);
+      }
       codigo = `${paisPorNombre.id}`;
       nombre = paisPorNombre.name;
     } else if (nombre === 'TABATINGA') {
       nombre = 'Brasil';
       codigo = '76';
-      errata.paises.add(`null->76 (TABATINGA->Brasil)`);
+      if (!produccion) {
+        errata.paises.add(`null->76 (TABATINGA->Brasil)`);
+      }
     } else {
-      errata.paises.add(`Caso ${caso[llaves.id]} tiene nombre de país ${nombre} pero no tiene código`);
+      if (!produccion) {
+        errata.paises.add(`Caso ${caso[llaves.id]} tiene nombre de país ${nombre} pero no tiene código`);
+      }
       return;
     }
   }
@@ -46,17 +54,23 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
       if (esIgual(nombreNormalizado, nombreNormalizado2)) return pais;
 
       if (existeEn(nombreNormalizado2, nombreNormalizado)) {
-        errata.paises.add(`${nombre}->${pais.name}`);
+        if (!produccion) {
+          errata.paises.add(`${nombre}->${pais.name}`);
+        }
         return pais;
       }
 
       if (existeEn(nombreNormalizado, nombreNormalizado2)) {
-        errata.paises.add(`${nombre}->${pais.name}`);
+        if (!produccion) {
+          errata.paises.add(`${nombre}->${pais.name}`);
+        }
         return pais;
       }
 
       if (igualAprox(nombreNormalizado, nombreNormalizado2)) {
-        errata.paises.add(`${nombre}->${pais.name}`);
+        if (!produccion) {
+          errata.paises.add(`${nombre}->${pais.name}`);
+        }
         return pais;
       }
 
@@ -64,7 +78,9 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
       const existePorNombre = datosPaises.find((p: Pais) => normalizarTexto(p.name) === nombreNormalizado);
 
       if (existePorNombre) {
-        errata.paises.add(`${codigo}->${existePorNombre.id} (${existePorNombre.name})`);
+        if (!produccion) {
+          errata.paises.add(`${codigo}->${existePorNombre.id} (${existePorNombre.name})`);
+        }
         return existePorNombre;
       }
 
@@ -72,14 +88,18 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
        * Casos que se arreglan manualmente
        */
       if (+codigo === 654 && nombreNormalizado2 === 'santa elena, ascension y tristan de acuna') {
-        errata.paises.add(`${nombre}->${pais.name}`);
+        if (!produccion) {
+          errata.paises.add(`${nombre}->${pais.name}`);
+        }
         return pais;
       }
 
       // No pasó ninguna prueba, registrar el problema en errata.
-      errata.paises.add(
-        `En el caso ${caso[llaves.id]} no hay manera de encontrar el país: ${nombre} con código: ${codigo}`
-      );
+      if (!produccion) {
+        errata.paises.add(
+          `En el caso ${caso[llaves.id]} no hay manera de encontrar el país: ${nombre} con código: ${codigo}`
+        );
+      }
       return;
     } else {
       /**
@@ -88,7 +108,9 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
       const existePorNombre = datosPaises.find((p: Pais) => normalizarTexto(p.name) === nombreNormalizado);
 
       if (existePorNombre) {
-        errata.paises.add(`${codigo}->${existePorNombre.id} (${existePorNombre.name})`);
+        if (!produccion) {
+          errata.paises.add(`${codigo}->${existePorNombre.id} (${existePorNombre.name})`);
+        }
         return existePorNombre;
       }
 
@@ -97,7 +119,9 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
       );
 
       if (existePorNombreAproximado) {
-        errata.paises.add(`${codigo}->${existePorNombreAproximado.id} (${existePorNombreAproximado.name})`);
+        if (!produccion) {
+          errata.paises.add(`${codigo}->${existePorNombreAproximado.id} (${existePorNombreAproximado.name})`);
+        }
         return existePorNombreAproximado;
       }
 
@@ -109,9 +133,11 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
       }
 
       // En este punto el código existe, es numérico, pero no se puede validar.
-      errata.municipios.add(
-        `No se pudo validar el país en caso ${caso[llaves.id]} con código: ${codigo} y nombre: ${nombre}`
-      );
+      if (!produccion) {
+        errata.municipios.add(
+          `No se pudo validar el país en caso ${caso[llaves.id]} con código: ${codigo} y nombre: ${nombre}`
+        );
+      }
       return;
     }
   } else {
@@ -124,19 +150,25 @@ export default (caso: CasoFuente, llaves: LlavesCaso): Pais | undefined => {
       const existePorNombre = datosPaises.find((p: Pais) => normalizarTexto(p.name) === normalizarTexto(codigo));
 
       if (existePorNombre) {
-        errata.paises.add(`${codigo}->${existePorNombre.id} (${existePorNombre.name})`);
+        if (!produccion) {
+          errata.paises.add(`${codigo}->${existePorNombre.id} (${existePorNombre.name})`);
+        }
         return existePorNombre;
       }
 
-      errata.paises.add(
-        `Caso ${
-          caso[llaves.id]
-        } tiene en el campo de código pais: ${codigo} pero no coincide con ningún país reconocible.`
-      );
+      if (!produccion) {
+        errata.paises.add(
+          `Caso ${
+            caso[llaves.id]
+          } tiene en el campo de código pais: ${codigo} pero no coincide con ningún país reconocible.`
+        );
+      }
       return;
     }
   }
 
-  errata.paises.add(`Caso ${caso[llaves.id]} no se pudo validar con código: ${codigo} y nombre: ${nombre}.`);
+  if (!produccion) {
+    errata.paises.add(`Caso ${caso[llaves.id]} no se pudo validar con código: ${codigo} y nombre: ${nombre}.`);
+  }
   return;
 };

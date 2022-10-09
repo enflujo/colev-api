@@ -3,13 +3,16 @@ import { CasoFuente, LlavesCaso, Municipio } from '../tipos';
 import { esIgual, esNumero, existeEn, igualAprox, normalizarTexto } from '../utilidades/ayudas';
 import { municipios } from '../utilidades/lugaresColombia';
 
+const produccion = process.env.NODE_ENV === 'produccion';
 const muns = municipios.datos;
 
 function validarSinCodigoConNombre(nombreNormalizado: string, codigo: string): Municipio | undefined {
   const existePorNombre = muns.find((d: Municipio) => normalizarTexto(d[1]) === nombreNormalizado);
 
   if (existePorNombre) {
-    errata.municipios.add(`${codigo}->${existePorNombre[3]} (${existePorNombre[1]})`);
+    if (!produccion) {
+      errata.municipios.add(`${codigo}->${existePorNombre[3]} (${existePorNombre[1]})`);
+    }
     return existePorNombre;
   }
   return;
@@ -39,19 +42,25 @@ export default (caso: CasoFuente, llaves: LlavesCaso) => {
 
         // Si el nombre de referencia es parte del nombre en el caso
         if (existeEn(nombreNormalizado2, nombreNormalizado)) {
-          errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          if (!produccion) {
+            errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          }
           return arrMun;
         }
 
         // Si el nombre en el caso es parte del nombre de referencia
         if (existeEn(nombreNormalizado, nombreNormalizado2)) {
-          errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          if (!produccion) {
+            errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          }
           return arrMun;
         }
 
         // Usar fuzz para ver si se parecen al menos en un 50%
         if (igualAprox(nombreNormalizado, nombreNormalizado2)) {
-          errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          if (!produccion) {
+            errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          }
           return arrMun;
         }
 
@@ -59,19 +68,25 @@ export default (caso: CasoFuente, llaves: LlavesCaso) => {
          * Algunos casos que se corrigen manualmente.
          */
         if (nombreNormalizado === 'mompos' && nombreNormalizado2 === 'santa cruz de mompox') {
-          errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          if (!produccion) {
+            errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          }
           return arrMun;
         }
 
         if (nombreNormalizado === 'darien' && caso[llaves.dep] === arrMun[2] && nombreNormalizado2 === 'calima') {
-          errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          if (!produccion) {
+            errata.municipios.add(`${nombre}->${arrMun[1]}`);
+          }
           return arrMun;
         }
 
         // No pasó ninguna prueba, registrar el problema en errata.
-        errata.municipios.add(
-          `En el caso ${caso[llaveId]} no hay manera de encontrar el municipio: ${nombre} con código: ${codigo}`
-        );
+        if (!produccion) {
+          errata.municipios.add(
+            `En el caso ${caso[llaveId]} no hay manera de encontrar el municipio: ${nombre} con código: ${codigo}`
+          );
+        }
         return;
       } else {
         /**
@@ -83,9 +98,11 @@ export default (caso: CasoFuente, llaves: LlavesCaso) => {
         if (mun) return mun;
 
         // En este punto el código existe, es numérico, pero no se puede validar.
-        errata.municipios.add(
-          `No se pudo validar el municipio en caso ${caso[llaveId]} con código: ${codigo} y nombre: ${nombre}`
-        );
+        if (!produccion) {
+          errata.municipios.add(
+            `No se pudo validar el municipio en caso ${caso[llaveId]} con código: ${codigo} y nombre: ${nombre}`
+          );
+        }
         return;
       }
     } else {
@@ -96,9 +113,11 @@ export default (caso: CasoFuente, llaves: LlavesCaso) => {
       const mun = validarSinCodigoConNombre(nombreNormalizado, codigo);
       if (mun) return mun;
 
-      errata.departamentos.add(
-        `No se pudo validar el municipio en caso ${caso[llaveId]}, el código no es numérico: ${codigo} y nombre: ${nombre}`
-      );
+      if (!produccion) {
+        errata.departamentos.add(
+          `No se pudo validar el municipio en caso ${caso[llaveId]}, el código no es numérico: ${codigo} y nombre: ${nombre}`
+        );
+      }
       return;
     }
   } else if (codigo) {
@@ -110,13 +129,17 @@ export default (caso: CasoFuente, llaves: LlavesCaso) => {
       const arrMun = muns.find((mun: Municipio) => +mun[3] === +codigo);
 
       if (arrMun) {
-        errata.municipios.add(`null->${arrMun[1]}`);
+        if (!produccion) {
+          errata.municipios.add(`null->${arrMun[1]}`);
+        }
         return arrMun;
       }
 
-      errata.departamentos.add(
-        `No se pudo validar el municipio en caso ${caso[llaveId]} con código: ${codigo} y sin nombre`
-      );
+      if (!produccion) {
+        errata.departamentos.add(
+          `No se pudo validar el municipio en caso ${caso[llaveId]} con código: ${codigo} y sin nombre`
+        );
+      }
       return;
     }
   } else if (nombre) {
@@ -130,6 +153,8 @@ export default (caso: CasoFuente, llaves: LlavesCaso) => {
   /**
    * No tiene ninguno de los campos.
    */
-  errata.municipios.add(`Caso ${caso[llaveId]} no tiene campos para validar municipio.`);
+  if (!produccion) {
+    errata.municipios.add(`Caso ${caso[llaveId]} no tiene campos para validar municipio.`);
+  }
   return;
 };

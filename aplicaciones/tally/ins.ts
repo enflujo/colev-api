@@ -9,6 +9,7 @@ import { guardarVarios, desconectarBd } from './utilidades/baseDeDatos';
 import { MongoError } from 'mongodb';
 import barraProceso from './utilidades/barraProceso';
 
+const produccion = process.env.NODE_ENV === 'produccion';
 const iniciarEnPg = 0;
 /**
  * Extracción de los datos por medio de la API de Datos Abiertos: https://www.datos.gov.co/resource/gt2j-8ykr
@@ -63,7 +64,9 @@ async function extraer(total: number, pagina = iniciarEnPg) {
       barraProceso.update(casosProcesados, { pagina: pagina });
       extraer(total, pagina + 1);
     } else {
-      guardarJSON(errata, 'errata');
+      if (produccion) {
+        guardarJSON(errata, 'errata');
+      }
 
       try {
         await desconectarBd();

@@ -4,7 +4,8 @@
   "description": "Extractor de datos para el servidor",
   "license": "MIT",
   "scripts": {
-    "ins": "nodemon -r dotenv/config ins.ts dotenv_config_path=../../.env",
+    "ins:dev": "nodemon -r dotenv/config ins.ts dotenv_config_path=../../.env",
+    "ins:prod": "cross-env NODE_ENV=produccion ts-node -r dotenv/config ins.ts dotenv_config_path=../../.env",
     "twitter": "nodemon -r dotenv/config twitter.ts dotenv_config_path=../../.env"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
     "chalk": "^5.1.0",
     "cli-color": "^2.0.3",
     "cli-progress": "^3.11.2",
+    "cross-env": "^7.0.3",
     "dayjs": "^1.11.5",
     "dotenv": "^16.0.3",
     "fuzzball": "^2.1.2",

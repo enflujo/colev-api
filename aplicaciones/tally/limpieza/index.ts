@@ -5,6 +5,8 @@ import limpiarDepartamento from './departamento';
 import limpiarMunicipio from './municipio';
 import limpiarPais from './pais';
 
+const produccion = process.env.NODE_ENV === 'produccion';
+
 function limpiarId(caso: CasoFuente, llaves: LlavesCaso): number | undefined {
   const llaveId = llaves.id;
   let id = caso[llaveId] as string;
@@ -12,11 +14,15 @@ function limpiarId(caso: CasoFuente, llaves: LlavesCaso): number | undefined {
   if (id) {
     id = id.trim();
     if (esNumero(id)) return +id;
-    errata.id.add(`Caso ${caso[llaveId]} no tiene un id numérico, su valor es: ${id}`);
+    if (!produccion) {
+      errata.id.add(`Caso ${caso[llaveId]} no tiene un id numérico, su valor es: ${id}`);
+    }
     return;
   }
 
-  errata.id.add(`Caso ${caso[llaveId]} no tiene id`);
+  if (!produccion) {
+    errata.id.add(`Caso ${caso[llaveId]} no tiene id`);
+  }
   return;
 }
 
@@ -26,7 +32,9 @@ function limpiarFecha(caso: CasoFuente, llave: keyof CasoFuente, llaves: LlavesC
   if (fecha) {
     const fechaValida = fechaColombia(fecha.trim());
     if (fechaValida) return fechaValida;
-    errata.fechas.add(`Caso ${caso[llaves.id]} no tiene ${llave} con fecha válida, contiene: ${fecha}`);
+    if (!produccion) {
+      errata.fechas.add(`Caso ${caso[llaves.id]} no tiene ${llave} con fecha válida, contiene: ${fecha}`);
+    }
     return;
   }
   return;
@@ -49,24 +57,34 @@ function limpiarEdad(caso: CasoFuente, llaves: LlavesCaso): number | undefined {
           return +edad;
       }
     } else if (esNumero(edad)) {
-      errata.edad.add(
-        `Caso ${caso[llaves.id]} no tiene unidad de medida pero parece que si tiene edad numérica: ${+edad}`
-      );
+      if (!produccion) {
+        errata.edad.add(
+          `Caso ${caso[llaves.id]} no tiene unidad de medida pero parece que si tiene edad numérica: ${+edad}`
+        );
+      }
       return +edad;
     } else {
-      errata.edad.add(`Caso ${caso[llaves.id]} tiene en edad: ${edad} y unidad de medida: ${unidadMedida}`);
+      if (!produccion) {
+        errata.edad.add(`Caso ${caso[llaves.id]} tiene en edad: ${edad} y unidad de medida: ${unidadMedida}`);
+      }
     }
   } else if (edad) {
     if (esNumero(edad)) {
-      errata.edad.add(`Caso ${caso[llaves.id]} no tiene unidad de medida pero si tiene edad numérica: ${edad}`);
+      if (!produccion) {
+        errata.edad.add(`Caso ${caso[llaves.id]} no tiene unidad de medida pero si tiene edad numérica: ${edad}`);
+      }
       return +caso[llaves.edad];
     } else {
-      errata.edad.add(`Caso ${caso[llaves.id]} no tiene unidad de medida y el campo de edad no es numérico: ${edad}`);
+      if (!produccion) {
+        errata.edad.add(`Caso ${caso[llaves.id]} no tiene unidad de medida y el campo de edad no es numérico: ${edad}`);
+      }
       return;
     }
   }
 
-  errata.edad.add(`Caso ${caso[llaves.id]} no tiene los campos de edad ni unidad de medida`);
+  if (!produccion) {
+    errata.edad.add(`Caso ${caso[llaves.id]} no tiene los campos de edad ni unidad de medida`);
+  }
   return;
 }
 
@@ -83,10 +101,14 @@ function limpiarRecuperado(caso: CasoFuente, llaves: LlavesCaso): string | undef
       return;
     }
 
-    errata.recuperado.add(`Caso ${caso[llaves.id]} contiene un valor que no se puede validar: ${recuperado}`);
+    if (!produccion) {
+      errata.recuperado.add(`Caso ${caso[llaves.id]} contiene un valor que no se puede validar: ${recuperado}`);
+    }
     return;
   }
-  errata.recuperado.add(`Caso ${caso[llaves.id]} no tiene campo de recuperado`);
+  if (!produccion) {
+    errata.recuperado.add(`Caso ${caso[llaves.id]} no tiene campo de recuperado`);
+  }
   return;
 }
 
@@ -100,7 +122,9 @@ function limpiarRecuperacion(caso: CasoFuente, llaves: LlavesCaso) {
     if (nombreNormalizado === 'pcr') return 'PCR';
     else if (nombreNormalizado === 'tiempo') return 'tiempo';
 
-    errata.recuperacion.add(`Caso ${caso[llaves.id]} no tiene tipo de recuperación tiempo o PCR sino: ${tipo}`);
+    if (!produccion) {
+      errata.recuperacion.add(`Caso ${caso[llaves.id]} no tiene tipo de recuperación tiempo o PCR sino: ${tipo}`);
+    }
     return;
   }
 
@@ -117,7 +141,9 @@ function limpiarSexo(caso: CasoFuente, llaves: LlavesCaso): string | undefined {
     if (nombreNormalizado === 'f') return 'F';
     else if (nombreNormalizado === 'm') return 'M';
 
-    errata.sexo.add(`Caso ${caso[llaves.id]} no se pudo validar con tipo: ${sexo}`);
+    if (!produccion) {
+      errata.sexo.add(`Caso ${caso[llaves.id]} no se pudo validar con tipo: ${sexo}`);
+    }
   }
 
   return;
@@ -130,7 +156,9 @@ function limpiarPerEtnica(caso: CasoFuente, llaves: LlavesCaso): number | undefi
     codigo = codigo.trim();
     if (esNumero(codigo)) return +codigo;
 
-    errata.perEtnica.add(`Caso ${caso[llaves.id]} no tiene código numérico, su valor es: ${codigo}`);
+    if (!produccion) {
+      errata.perEtnica.add(`Caso ${caso[llaves.id]} no tiene código numérico, su valor es: ${codigo}`);
+    }
   }
 
   return;
@@ -147,7 +175,9 @@ function limpiarFuenteContagio(caso: CasoFuente, llaves: LlavesCaso): string | u
     else if (nombreNormalizado === 'comunitaria') return 'comunitaria';
     else if (nombreNormalizado === 'en estudio') return 'en estudio';
 
-    errata.fuenteContagio.add(`Caso ${caso[llaves.id]} no se puede validar con: ${fuente}`);
+    if (!produccion) {
+      errata.fuenteContagio.add(`Caso ${caso[llaves.id]} no se puede validar con: ${fuente}`);
+    }
   }
 
   return;
