@@ -4,7 +4,6 @@ services:
   bd:
     container_name: colev-api-bd
     image: mongo
-    restart: unless-stopped
     networks:
       - colev-api
     volumes:
@@ -19,11 +18,25 @@ services:
   cache:
     container_name: colev-api-cache
     image: redis:7.0-alpine
-    restart: unless-stopped
     networks:
       - colev-api
     ports:
       - ${CACHE_PUERTO}:6379
+
+  mongo-express:
+    container_name: colev-api-mongoexpress
+    image: mongo-express
+    networks:
+      - colev-api
+    ports:
+      - 8081:8081
+    depends_on:
+      - bd
+      - cache
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${BD_USUARIO}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${BD_CLAVE}
+      ME_CONFIG_MONGODB_SERVER: bd
 
 networks:
   colev-api:

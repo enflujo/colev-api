@@ -9,6 +9,26 @@ Aplicación para extraer, procesar y administrar los datos sobre Covid-19 en Col
 - Api: NodeJS (Fastify)
 - Sitio web: Vue
 
+### Contenedores de Docker
+
+#### Desarollo local
+
+Para desarrollo local incluimos mongo-express (Ver `docker-compose.desarrollo.yml`).
+
+Iniciar contenedores con:
+
+```bash
+docker compose -f docker-compose.desarrollo.yml up
+```
+
+#### Producción (comando en servidor)
+
+En modo de producción no se necesita mongo-express (Ver `docker-compose.yml`)
+
+```bash
+docker compose up
+```
+
 ### Proceso de validación
 
 ```mermaid
@@ -87,4 +107,3 @@ Y este para la aplicación `sitio`
 - paleta de color
 - hover mostrar tiempo
 - mostrar porcentaje o valor que le da el tamaño a las palabras
--
