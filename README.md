@@ -18,7 +18,7 @@ Para desarrollo local incluimos mongo-express (Ver `docker-compose.desarrollo.ym
 Iniciar contenedores con:
 
 ```bash
-docker compose -f docker-compose.desarrollo.yml up
+docker compose -f docker-compose.desarrollo.yml up -d
 ```
 
 #### Producción (comando en servidor)
@@ -26,7 +26,7 @@ docker compose -f docker-compose.desarrollo.yml up
 En modo de producción no se necesita mongo-express (Ver `docker-compose.yml`)
 
 ```bash
-docker compose up
+docker compose up -d
 ```
 
 ### Proceso de validación

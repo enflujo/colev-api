@@ -17,7 +17,8 @@
     "build": "yarn build:api && yarn build:www",
     "build:api": "yarn workspace servidor build",
     "build:www": "yarn workspace sitio build",
-    "ins": "yarn workspace tally ins",
+    "ins": "yarn workspace tally ins:prod",
+    "ins:dev": "yarn workspace tally ins:dev",
     "twitter": "yarn workspace tally twitter"
   },
   "dependencies": {
