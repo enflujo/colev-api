@@ -24,7 +24,7 @@ async function extraer(total: number, pagina = iniciarEnPg) {
    * EL API donde están los datos (SODA) supuestamente no tiene límites desde la versión 2.1.
    * Mongo tiene un limite de 100,000 en `insertMany`.
    */
-  const numeroPorPagina = 20000;
+  const numeroPorPagina = 10000;
 
   if (pagina === iniciarEnPg) {
     barraProceso.start(total, 0, {
