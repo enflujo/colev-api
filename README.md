@@ -107,3 +107,15 @@ Y este para la aplicación `sitio`
 - paleta de color
 - hover mostrar tiempo
 - mostrar porcentaje o valor que le da el tamaño a las palabras
+
+Para definir la cantidad de entradas por página en el extractor de datos de INS se puede pasar la variable ambiente `CANTIDAD`
+
+```bash
+CANTIDAD=500 yarn ins
+```
+
+También se puede definir la página de inicio con variuable `PAGINA`
+
+```bash
+CANTIDAD=500 PAGINA=230 yarn ins
+```

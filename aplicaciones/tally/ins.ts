@@ -10,24 +10,24 @@ import { MongoError } from 'mongodb';
 import barraProceso from './utilidades/barraProceso';
 
 const produccion = process.env.NODE_ENV === 'produccion';
-const iniciarEnPg = 0;
-console.log(process.env.CANTIDAD);
+const iniciarEnPg = process.env.PAGINA ? +process.env.PAGINA : 0;
+/**
+ * La cantidad de casos por petición se procesan en memoria por lo que toca mantenerlo bajo.
+ * Entre más alto, el servidor necesita tener más memoria ram para procesarlos.
+ * El peso inicial (sin considerar la ram que necesita luego para procesar) se puede estimar con:
+ * 10000 alrededor de 6.5mb | 20000 alrededor de 13mb | 50000 alrededor de 32.5mb
+ *
+ * EL API donde están los datos (SODA) supuestamente no tiene límites desde la versión 2.1.
+ * Mongo tiene un limite de 100,000 en `insertMany`.
+ */
+const numeroPorPagina = process.env.CANTIDAD ? +process.env.CANTIDAD : 20000;
+
+console.log(`Iniciando extracción en página ${iniciarEnPg} y modo ${numeroPorPagina} por página`);
 /**
  * Extracción de los datos por medio de la API de Datos Abiertos: https://www.datos.gov.co/resource/gt2j-8ykr
  * Hace varias peticiones a la API para ir extrayendo y guardando en la base de datos sin saturar la memoria RAM.
  */
 async function extraer(total: number, pagina = iniciarEnPg) {
-  /**
-   * La cantidad de casos por petición se procesan en memoria por lo que toca mantenerlo bajo.
-   * Entre más alto, el servidor necesita tener más memoria ram para procesarlos.
-   * El peso inicial (sin considerar la ram que necesita luego para procesar) se puede estimar con:
-   * 10000 alrededor de 6.5mb | 20000 alrededor de 13mb | 50000 alrededor de 32.5mb
-   *
-   * EL API donde están los datos (SODA) supuestamente no tiene límites desde la versión 2.1.
-   * Mongo tiene un limite de 100,000 en `insertMany`.
-   */
-  const numeroPorPagina = +process.env.CANTIDAD || 20000;
-
   if (pagina === iniciarEnPg) {
     barraProceso.start(total, 0, {
       pagina: iniciarEnPg,

@@ -21,11 +21,6 @@
     "ins:dev": "yarn workspace tally ins:dev",
     "twitter": "yarn workspace tally twitter"
   },
-  "dependencies": {
-    "dayjs": "^1.11.5",
-    "filesize": "^10.0.5",
-    "world_countries_lists": "^2.6.0"
-  },
   "devDependencies": {
     "concurrently": "^7.4.0",
     "prettier": "^2.7.1"
