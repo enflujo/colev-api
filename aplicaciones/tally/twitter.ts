@@ -30,9 +30,10 @@ const definirParametros = (fechaPrimerTuit: Date, fechaUltimoTuit: Date): Parame
   const esMismoDia =
     diaUltimoTuit.año === diaHoy.año || diaUltimoTuit.mes === diaHoy.mes || diaUltimoTuit.dia === diaHoy.dia;
 
+  // POR HACER: toca cambiar esto cuando este llena la BD o hacer otra comprobación para que empiece 2 semanas antes si ya sabemos que esta lleno.
   const fechaInicial =
     fechaPrimerTuit >= fechaInicioPandemia ? fechaInicioPandemia : reducirSemanas(2, fechaUltimoTuit);
-  const fechaFinal = esMismoDia ? hoy : fechaPrimerTuit;
+  const fechaFinal = esMismoDia ? hoy : fechaUltimoTuit;
 
   return {
     query: `(${busqueda}) place_country:CO`,

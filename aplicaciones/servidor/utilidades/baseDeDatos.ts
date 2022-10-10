@@ -2,7 +2,7 @@ import { Db, MongoClient } from 'mongodb';
 import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import ms from 'ms';
-import { CasoLimpio, CasoPorDia, DatosCasosPorDia } from '../../tipos';
+import { CasoPorDia, DatosCasosPorDia } from '../tipos';
 
 const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO } = process.env;
 const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
@@ -33,44 +33,6 @@ export const conectarBd = async (): Promise<Db> => {
   bd = conexion.db(nombreBd);
 
   return bd;
-};
-
-export const guardarBasicosTweeter = async (datos: any): Promise<void> => {
-  await conectarBd();
-
-  if (bd) {
-    const entradas = datos.map((tweet: any) => {
-      return {
-        updateOne: {
-          filter: { _id: tweet.id },
-          update: { $set: tweet },
-          upsert: true,
-        },
-      };
-    });
-
-    const coleccion = bd.collection('tweets');
-    await coleccion.bulkWrite(entradas);
-  }
-};
-
-export const guardarVarios = async (datos: CasoLimpio[], nombreColeccion: string): Promise<void> => {
-  await conectarBd();
-
-  if (bd) {
-    const entradas = datos.map((caso: CasoLimpio) => {
-      return {
-        updateOne: {
-          filter: { _id: caso._id },
-          update: { $set: caso },
-          upsert: true,
-        },
-      };
-    });
-
-    const coleccion = bd.collection(nombreColeccion);
-    await coleccion.bulkWrite(entradas);
-  }
 };
 
 type ObjetoCaso = {
