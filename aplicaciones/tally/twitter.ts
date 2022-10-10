@@ -82,6 +82,8 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
     if (meta.next_token) {
       console.log(meta.next_token);
       await peticion(parametrosBusqueda, meta.next_token);
+    } else {
+      console.log('-------------- FIN ---------------');
     }
   } catch (error) {
     if (axios.isAxiosError(error)) {
