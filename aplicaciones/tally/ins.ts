@@ -11,6 +11,7 @@ import barraProceso from './utilidades/barraProceso';
 
 const produccion = process.env.NODE_ENV === 'produccion';
 const iniciarEnPg = 0;
+console.log(process.env.CANTIDAD);
 /**
  * Extracción de los datos por medio de la API de Datos Abiertos: https://www.datos.gov.co/resource/gt2j-8ykr
  * Hace varias peticiones a la API para ir extrayendo y guardando en la base de datos sin saturar la memoria RAM.
@@ -25,7 +26,7 @@ async function extraer(total: number, pagina = iniciarEnPg) {
    * EL API donde están los datos (SODA) supuestamente no tiene límites desde la versión 2.1.
    * Mongo tiene un limite de 100,000 en `insertMany`.
    */
-  const numeroPorPagina = 5000;
+  const numeroPorPagina = +process.env.CANTIDAD || 20000;
 
   if (pagina === iniciarEnPg) {
     barraProceso.start(total, 0, {
