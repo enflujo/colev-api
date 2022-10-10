@@ -5,8 +5,9 @@
   "license": "MIT",
   "scripts": {
     "ins:dev": "nodemon -r dotenv/config ins.ts dotenv_config_path=../../.env",
-    "ins:prod": "cross-env NODE_ENV=produccion ts-node -r dotenv/config ins.ts dotenv_config_path=../../.env",
-    "twitter": "nodemon -r dotenv/config twitter.ts dotenv_config_path=../../.env"
+    "ins:prod": "cross-env NODE_ENV=produccion ts-node --transpileOnly -r dotenv/config ins.ts dotenv_config_path=../../.env",
+    "twitter:dev": "nodemon -r dotenv/config twitter.ts dotenv_config_path=../../.env",
+    "twitter:prod": "ts-node --transpileOnly -r dotenv/config twitter.ts dotenv_config_path=../../.env"
   },
   "dependencies": {
     "@types/cli-color": "^2.0.2",
