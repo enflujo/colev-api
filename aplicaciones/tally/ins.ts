@@ -49,8 +49,8 @@ async function extraer(total: number, pagina = iniciarEnPg) {
           if (casoLimpio) datosLimpios.push(casoLimpio);
         });
       } catch (err) {
-        console.error(logError(err));
-        // throw new Error(JSON.stringify(err, null, 2));
+        barraProceso.stop();
+        throw new Error(JSON.stringify(logError(err)));
       }
 
       const casosProcesados = inicioBloque + data.length;
@@ -59,7 +59,8 @@ async function extraer(total: number, pagina = iniciarEnPg) {
         await guardarVarios(datosLimpios, 'casos');
       } catch (err) {
         const error = err as MongoError;
-        console.log(logError(`Error en instancia de MongoDB: ${error.code}`, error.message));
+        barraProceso.stop();
+        throw new Error(JSON.stringify(logError(`Error en instancia de MongoDB: ${error.code}`, error.message)));
       }
 
       barraProceso.update(casosProcesados, { pagina: pagina });
@@ -72,6 +73,7 @@ async function extraer(total: number, pagina = iniciarEnPg) {
       try {
         await desconectarBd();
       } catch (err) {
+        barraProceso.stop();
         console.log(logError(err));
       }
 
