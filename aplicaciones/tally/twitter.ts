@@ -80,6 +80,7 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
     await guardarMedios(includes.media, 'tuits-medios');
 
     if (meta.next_token) {
+      console.log(meta.next_token);
       await peticion(parametrosBusqueda, meta.next_token);
     }
   } catch (error) {
