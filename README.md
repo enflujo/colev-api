@@ -11,7 +11,7 @@ Aplicación para extraer, procesar y administrar los datos sobre Covid-19 en Col
 
 ### Contenedores de Docker
 
-#### Desarollo local
+#### Desarrollo local
 
 Para desarrollo local incluimos mongo-express (Ver `docker-compose.desarrollo.yml`).
 
@@ -114,7 +114,7 @@ Para definir la cantidad de entradas por página en el extractor de datos de INS
 CANTIDAD=500 yarn ins
 ```
 
-También se puede definir la página de inicio con variuable `PAGINA`
+También se puede definir la página de inicio con variable `PAGINA`
 
 ```bash
 CANTIDAD=500 PAGINA=230 yarn ins
