@@ -114,6 +114,7 @@ async function inicio() {
         })
       );
     } else {
+      console.error(error);
       throw new Error(JSON.stringify({ error: 'desconocido', mensaje: error }));
     }
   }
