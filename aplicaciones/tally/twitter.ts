@@ -77,9 +77,17 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
       return tuit;
     };
 
-    await guardarTuits(tweets.map(modelarTuit), 'tuits');
-    await guardarTuits(includes.tweets.map(modelarTuit), 'tuits-relacionados');
-    await guardarMedios(includes.media, 'tuits-medios');
+    if (tweets) {
+      await guardarTuits(tweets.map(modelarTuit), 'tuits');
+    }
+
+    if (includes.tweets) {
+      await guardarTuits(includes.tweets.map(modelarTuit), 'tuits-relacionados');
+    }
+
+    if (includes.media) {
+      await guardarMedios(includes.media, 'tuits-medios');
+    }
 
     if (meta.next_token) {
       console.log(meta.next_token);
@@ -92,7 +100,7 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
       console.error('xxxxxxx', logError(JSON.stringify(error.response?.data, null, 2)), 'xxxxxxxx');
     }
 
-    throw new Error();
+    throw new Error(JSON.stringify(error));
   }
 }
 
@@ -113,10 +121,9 @@ async function inicio() {
           mensaje: error.response.data.message,
         })
       );
-    } else {
-      console.error(error);
-      throw new Error(JSON.stringify({ error: 'desconocido', mensaje: error }));
     }
+
+    throw new Error(JSON.stringify({ error: 'desconocido', mensaje: error }));
   }
 }
 
