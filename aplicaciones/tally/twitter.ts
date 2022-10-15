@@ -6,6 +6,8 @@ import { ParametrosQuery, TLugar, TUsuario, TwitterBasicos } from './tipos';
 import { camposMedios, camposTweet, expansiones } from './utilidades/camposTweeter';
 import { reducirSemanas } from './utilidades/ayudas';
 
+const paginaTokenInicio = process.env.PAGINA_TOKEN;
+
 // Un día antes del inicio de la pandemia (6 de marzo, 2020)
 const fechaInicioPandemia = new Date('05 March 2020 00:00 UTC');
 
@@ -102,7 +104,7 @@ async function inicio() {
     const fechaUltimoTuit = ultimoTuit ? ultimoTuit.created_at : new Date();
     const parametros = definirParametros(fechaPrimerTuit, fechaUltimoTuit);
 
-    await peticion(parametros);
+    await peticion(parametros, paginaTokenInicio);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw new Error(
