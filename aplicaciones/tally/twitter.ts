@@ -6,6 +6,10 @@ import { ParametrosQuery, TLugar, TUsuario, TwitterBasicos } from './tipos';
 import { camposMedios, camposTweet, expansiones } from './utilidades/camposTweeter';
 import { reducirSemanas } from './utilidades/ayudas';
 
+const esperar15Minutos = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 900000));
+};
+
 const paginaTokenInicio = process.env.PAGINA_TOKEN;
 
 // Un día antes del inicio de la pandemia (6 de marzo, 2020)
@@ -91,7 +95,18 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
 
     if (meta.next_token) {
       console.log(meta.next_token);
-      await peticion(parametrosBusqueda, meta.next_token);
+
+      try {
+        await peticion(parametrosBusqueda, meta.next_token);
+      } catch (error) {
+        if (error.status === 429) {
+          console.log('Esperando 15 minutos antes de volver a hacer petición');
+          await esperar15Minutos();
+          console.log('De vuelta con peticiones');
+          console.log(meta.next_token);
+          await peticion(parametrosBusqueda, meta.next_token);
+        }
+      }
     } else {
       console.log('-------------- FIN ---------------');
     }
