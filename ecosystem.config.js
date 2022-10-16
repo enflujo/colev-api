@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'coleAPI',
+      name: 'colevAPI',
       script: './api/index.js',
     },
   ],

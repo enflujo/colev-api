@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-const servidorUrl = 'http://localhost:8080';
+const servidorUrl = 'https://colev.enflujo.com/tally';
 const muertos = ref([]);
 const fechaInicial = ref(null);
 const fechaFinal = ref(null);
@@ -22,6 +22,7 @@ async function obtenerMuertos() {
 
     <p v-if="fechaInicial">fecha inicial: {{ fechaInicial }}</p>
     <p v-if="fechaFinal">fecha final: {{ fechaFinal }}</p>
+    <p v-if="muertos.length">{{ muertos.length }}</p>
   </div>
 </template>
 
