@@ -8,7 +8,7 @@ const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO } = process.en
 const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
 const cache = new Keyv({
   store: new KeyvRedis(`redis://localhost:${CACHE_PUERTO}`),
-  ttl: ms('15d'),
+  // ttl: ms('15d'),
   namespace: 'colev-api-cache',
 });
 
@@ -16,8 +16,8 @@ const nombreBd = 'colev';
 
 const colecciones = {
   casos: 'casos',
-  twitterTweets: 'tweets',
-  twitterLugares: 'tweeter-lugares',
+  tuits: 'tuits',
+  tuitsRelacionados: 'tuits-relacionados',
 };
 
 let bd: Db | null = null;
@@ -58,7 +58,6 @@ export const casosPorDia = async (): Promise<DatosCasosPorDia | undefined> => {
 
     if (datosGuardados) {
       datos = JSON.parse(datosGuardados);
-      console.log('cache');
     }
   }
 
@@ -100,7 +99,6 @@ export const casosPorDia = async (): Promise<DatosCasosPorDia | undefined> => {
 
         // Guardar el resultado en caché para que estén disponibles en los siguientes llamados a esta función.
         cache.set(id, JSON.stringify(datos));
-        console.log('mongo');
         return datos;
       }
     }
@@ -123,7 +121,6 @@ export const tweetsPorHora = async (): Promise<any | undefined> => {
 
     if (datosGuardados) {
       datos = JSON.parse(datosGuardados);
-      console.log('cache');
     }
   }
 
@@ -134,8 +131,8 @@ export const tweetsPorHora = async (): Promise<any | undefined> => {
     // Asegurarse que se pudo conectar a mongo.
     if (bd) {
       // Definir desde cual colección se extraen los datos.
-      const coleccion = bd.collection(colecciones.twitterTweets);
-      const respuesta = await coleccion
+      const coleccion = bd.collection(colecciones.tuits);
+      const datos = await coleccion
         .aggregate([
           {
             $project: {
@@ -160,7 +157,8 @@ export const tweetsPorHora = async (): Promise<any | undefined> => {
         ])
         .toArray();
 
-      datos = respuesta;
+      cache.set(id, JSON.stringify(datos));
+      return datos;
       // Query
       // const tweetsPorHora: any = await coleccion
       //   .aggregate([
@@ -190,12 +188,14 @@ export const tweetsPorHora = async (): Promise<any | undefined> => {
       //   };
 
       //   // Guardar el resultado en caché para que estén disponibles en los siguientes llamados a esta función.
-      //   cache.set(id, JSON.stringify(datos));
-      //   console.log('mongo');
-      //   return datos;
+
       // }
     }
   }
 
   return datos;
+};
+
+export const borrarCache = async (llave: string) => {
+  return await cache.delete(llave);
 };
