@@ -11,6 +11,7 @@ const esperar15Minutos = async () => {
 };
 
 const paginaTokenInicio = process.env.PAGINA_TOKEN;
+let tokenActual;
 
 // Un día antes del inicio de la pandemia (6 de marzo, 2020)
 const fechaInicioPandemia = new Date('05 March 2020 00:00 UTC');
@@ -95,23 +96,19 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
 
     if (meta.next_token) {
       console.log(meta.next_token);
-
-      try {
-        await peticion(parametrosBusqueda, meta.next_token);
-      } catch (error) {
-        if (error.status === 429) {
-          console.log('Esperando 15 minutos antes de volver a hacer petición');
-          await esperar15Minutos();
-          console.log('De vuelta con peticiones');
-          console.log(meta.next_token);
-          await peticion(parametrosBusqueda, meta.next_token);
-        }
-      }
+      tokenActual = meta.next_token;
+      await peticion(parametrosBusqueda, meta.next_token);
     } else {
       console.log('-------------- FIN ---------------');
     }
   } catch (error) {
     if (axios.isAxiosError(error)) {
+      if (error.status === 429) {
+        console.log('Esperando 15 minutos antes de volver a hacer petición');
+        await esperar15Minutos();
+        console.log('De vuelta con peticiones');
+        return await peticion(parametrosBusqueda, tokenActual);
+      }
       console.error('xxxxxxx', logError(JSON.stringify(error.response?.data, null, 2)), 'xxxxxxxx');
     }
 
