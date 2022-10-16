@@ -103,7 +103,7 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
     }
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      if (error.status === 429) {
+      if (error.response.data.status === 429) {
         console.log('Esperando 15 minutos antes de volver a hacer petición');
         await esperar15Minutos();
         console.log('De vuelta con peticiones');
