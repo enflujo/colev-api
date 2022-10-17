@@ -9,7 +9,6 @@
     "aplicaciones/*"
   ],
   "scripts": {
-    "start": "node api/index.js",
     "dev": "concurrently --kill-others-on-fail --raw \"yarn dev:ts\" \"yarn dev:api\" \"yarn dev:www\"",
     "dev:ts": "yarn workspace servidor dev",
     "dev:api": "nodemon api/index.js",

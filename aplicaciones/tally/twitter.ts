@@ -1,7 +1,7 @@
 import axios from 'axios';
 import palabrasClave from './utilidades/palabrasClaves';
 import { buscarPrimerUltimoTuit, guardarMedios, guardarTuits } from './utilidades/baseDeDatos';
-import { logError } from './utilidades/constantes';
+import { logAviso, logCyan, logError, logVerde } from './utilidades/constantes';
 import { ParametrosQuery, TLugar, TUsuario, TwitterBasicos } from './tipos';
 import { camposMedios, camposTweet, expansiones } from './utilidades/camposTweeter';
 import { reducirSemanas } from './utilidades/ayudas';
@@ -95,7 +95,7 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
     }
 
     if (meta.next_token) {
-      console.log(meta.next_token);
+      console.log(logCyan(meta.next_token));
       tokenActual = meta.next_token;
       await peticion(parametrosBusqueda, meta.next_token);
     } else {
@@ -104,9 +104,9 @@ async function peticion(parametrosBusqueda: ParametrosQuery, pagina?: string) {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response.data.status === 429) {
-        console.log('Esperando 15 minutos antes de volver a hacer petición');
+        console.log(logAviso('Esperando 15 minutos antes de volver a hacer petición'));
         await esperar15Minutos();
-        console.log('De vuelta con peticiones');
+        console.log(logVerde('De vuelta con peticiones'));
         return await peticion(parametrosBusqueda, tokenActual);
       }
       console.error('xxxxxxx', logError(JSON.stringify(error.response?.data, null, 2)), 'xxxxxxxx');
