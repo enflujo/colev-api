@@ -5,6 +5,9 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
   plugins: [vue()],
   clearScreen: false,
+  server: {
+    port: 3000,
+  },
   build: {
     outDir: '../../www',
   },

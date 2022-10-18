@@ -1,20 +1,27 @@
 import 'dotenv/config';
 import fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import { borrarCache, casosPorDia, tweetsPorHora } from './utilidades/baseDeDatos';
+import { borrarCache, casosPorDia, tuitsPorDia, tuitsPorHora } from './utilidades/baseDeDatos';
 
 const servidor: FastifyInstance = fastify();
 const PUERTO = process.env.API_PUERTO ? +process.env.API_PUERTO : 8080;
 
-servidor.register(cors);
+if (process.env.NODE_ENV !== 'produccion') {
+  servidor.register(cors);
+}
 
 servidor.get('/', async (request, reply) => {
   const datos = await casosPorDia();
   reply.send(datos);
 });
 
-servidor.get('/tweets', async (request, reply) => {
-  const datos = await tweetsPorHora();
+servidor.get('/tweets-por-dia', async (request, reply) => {
+  const datos = await tuitsPorDia();
+  reply.send(datos);
+});
+
+servidor.get('/tweets-por-hora', async (request, reply) => {
+  const datos = await tuitsPorHora();
   reply.send(datos);
 });
 

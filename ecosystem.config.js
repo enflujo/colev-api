@@ -3,6 +3,9 @@ module.exports = {
     {
       name: 'colevAPI',
       script: './api/index.js',
+      env: {
+        NODE_ENV: 'produccion',
+      },
     },
   ],
 };

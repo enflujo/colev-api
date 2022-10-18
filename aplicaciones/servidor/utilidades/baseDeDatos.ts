@@ -2,13 +2,20 @@ import { Db, MongoClient } from 'mongodb';
 import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import ms from 'ms';
-import { CasoPorDia, DatosCasosPorDia } from '../tipos';
+import {
+  CasosPorDia,
+  RespuestaCasosPorDia,
+  RespuestaTuitsPorDia,
+  RespuestaTuitsPorHora,
+  TuitsPorDia,
+  TuitsPorHora,
+} from '../tipos';
 
 const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO } = process.env;
 const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
 const cache = new Keyv({
   store: new KeyvRedis(`redis://localhost:${CACHE_PUERTO}`),
-  // ttl: ms('15d'),
+  // ttl: ms('15s'),
   namespace: 'colev-api-cache',
 });
 
@@ -35,31 +42,30 @@ export const conectarBd = async (): Promise<Db> => {
   return bd;
 };
 
-type ObjetoCaso = {
-  _id: Date;
-  muertos: number;
-  total: number;
-};
-
-/**
- * Rutas
- */
-export const casosPorDia = async (): Promise<DatosCasosPorDia | undefined> => {
-  // Este id se usa para buscar en el caché o guardar el resultado de mongo.
-  const id = 'casosPorDia';
-
-  // Definir variable de datos que pueden salir del caché o de mongo.
-  let datos: DatosCasosPorDia | undefined;
-
+const responderDesdeCache = async (id: string) => {
   // USAR_CACHE se define en el archivo .env para poderlo desactivar con facilidad.
   if (USAR_CACHE === 'true') {
     // Acá están los datos guardados si no ha pasado el tiempo que se define en ttl y ya se guardó el resultado con este id.
     const datosGuardados = await cache.get(id);
 
     if (datosGuardados) {
-      datos = JSON.parse(datosGuardados);
+      console.log('desde cache');
+      return JSON.parse(datosGuardados);
     }
   }
+
+  return null;
+};
+
+/**
+ * Rutas
+ */
+export const casosPorDia = async (): Promise<CasosPorDia[] | undefined> => {
+  // Este id se usa para buscar en el caché o guardar el resultado de mongo.
+  const id = 'casosPorDia';
+
+  // Definir variable de datos que pueden salir del caché o de mongo.
+  let datos: CasosPorDia[] | undefined = await responderDesdeCache(id);
 
   // Si no encontró nada en el caché, hace el query en mongo.
   if (!datos) {
@@ -88,17 +94,15 @@ export const casosPorDia = async (): Promise<DatosCasosPorDia | undefined> => {
             $sort: { _id: 1 },
           },
         ])
-        .toArray()) as ObjetoCaso[];
+        .toArray()) as RespuestaCasosPorDia[];
 
       // Aplanar respuesta de objetos a arrays para que sea la menor cantidad de bits que se mandan desde la API.
       if (casos && casos.length) {
-        datos = {
-          llaves: ['fecha', 'muertos', 'total'],
-          casos: casos.map((obj: ObjetoCaso): CasoPorDia => [obj._id, obj.muertos, obj.total]),
-        };
+        datos = casos.map((obj): CasosPorDia => [obj._id, obj.muertos, obj.total]);
 
         // Guardar el resultado en caché para que estén disponibles en los siguientes llamados a esta función.
         cache.set(id, JSON.stringify(datos));
+
         return datos;
       }
     }
@@ -107,22 +111,12 @@ export const casosPorDia = async (): Promise<DatosCasosPorDia | undefined> => {
   return datos;
 };
 
-export const tweetsPorHora = async (): Promise<any | undefined> => {
+export const tuitsPorDia = async (): Promise<TuitsPorDia[] | undefined> => {
   // Este id se usa para buscar en el caché o guardar el resultado de mongo.
-  const id = 'tweetsPorHora';
+  const id = 'tuitsPorDia';
 
   // Definir variable de datos que pueden salir del caché o de mongo.
-  let datos: any | undefined;
-
-  // USAR_CACHE se define en el archivo .env para poderlo desactivar con facilidad.
-  if (USAR_CACHE === 'true') {
-    // Acá están los datos guardados si no ha pasado el tiempo que se define en ttl y ya se guardó el resultado con este id.
-    const datosGuardados = await cache.get(id);
-
-    if (datosGuardados) {
-      datos = JSON.parse(datosGuardados);
-    }
-  }
+  let datos: TuitsPorDia[] | undefined = await responderDesdeCache(id);
 
   // Si no encontró nada en el caché, hace el query en mongo.
   if (!datos) {
@@ -132,21 +126,20 @@ export const tweetsPorHora = async (): Promise<any | undefined> => {
     if (bd) {
       // Definir desde cual colección se extraen los datos.
       const coleccion = bd.collection(colecciones.tuits);
-      const datos = await coleccion
+      const tuitsPorDia = (await coleccion
         .aggregate([
           {
             $project: {
-              a: { $year: { $toDate: '$created_at' } },
-              m: { $month: { $toDate: '$created_at' } },
-              d: { $dayOfMonth: { $toDate: '$created_at' } },
-              h: { $hour: { $toDate: '$created_at' } },
-              fecha: { $toDate: '$created_at' },
+              a: { $year: '$created_at' },
+              m: { $month: '$created_at' },
+              d: { $dayOfMonth: '$created_at' },
+              fecha: '$created_at',
               tweet: 1,
             },
           },
           {
             $group: {
-              _id: { año: '$a', mes: '$m', dia: '$d', hora: '$h' },
+              _id: ['$a', '$m', '$d'],
               fecha: { $first: '$fecha' },
               total: { $sum: 1 },
             },
@@ -155,41 +148,64 @@ export const tweetsPorHora = async (): Promise<any | undefined> => {
             $sort: { fecha: 1 },
           },
         ])
-        .toArray();
+        .toArray()) as RespuestaTuitsPorDia[];
 
-      cache.set(id, JSON.stringify(datos));
-      return datos;
-      // Query
-      // const tweetsPorHora: any = await coleccion
-      //   .aggregate([
-      //     {
-      //       $project: {
-      //         a: {$year: '$created_at'},
-      //         m: {$month: '$created_at'},
-      //         d: {$dayOfMonth: '$created_at'},
-      //         h: {$hour: '$created_at'},
-      //         tweet: 1,
-      //       },
-      //       {
-      //         $group: {
-      //           _id: { "year":"$y","month":"$m","day":"$d","hour":"$h"},
-      //           count: {$sum: 1}
-      //         }
-      //       }
-      //     },
-      //   ]).toArray() as any;
-      //   console.log(tweetsPorHora);
-      //   datos = tweetsPorHora;
-      // Aplanar respuesta de objetos a arrays para que sea la menor cantidad de bits que se mandan desde la API.
-      // if (tweetsPorHora && casos.length) {
-      //   datos = {
-      //     llaves: ['fecha', 'muertos', 'total'],
-      //     casos: casos.map((obj: ObjetoCaso): CasoPorDia => [obj._id, obj.muertos, obj.total]),
-      //   };
+      if (tuitsPorDia && tuitsPorDia.length) {
+        datos = tuitsPorDia.map((datosDia) => [datosDia._id.join('-'), datosDia.total]);
+        cache.set(id, JSON.stringify(datos));
 
-      //   // Guardar el resultado en caché para que estén disponibles en los siguientes llamados a esta función.
+        return datos;
+      }
+    }
+  }
 
-      // }
+  return datos;
+};
+
+export const tuitsPorHora = async (): Promise<TuitsPorHora[] | undefined> => {
+  const id = 'tuitsPorHora';
+  let datos: TuitsPorHora[] | undefined = await responderDesdeCache(id);
+
+  if (!datos) {
+    await conectarBd();
+
+    if (bd) {
+      const coleccion = bd.collection(colecciones.tuits);
+      const tuitsPorHora = (await coleccion
+        .aggregate([
+          {
+            $project: {
+              a: { $year: '$created_at' },
+              m: { $month: '$created_at' },
+              d: { $dayOfMonth: '$created_at' },
+              h: { $hour: '$created_at' },
+              fecha: '$created_at',
+              tweet: 1,
+            },
+          },
+          {
+            $group: {
+              _id: ['$a', '$m', '$d', '$h'],
+              fecha: { $first: '$fecha' },
+              total: { $sum: 1 },
+            },
+          },
+          {
+            $sort: { fecha: 1 },
+          },
+        ])
+        .toArray()) as RespuestaTuitsPorHora[];
+
+      if (tuitsPorHora && tuitsPorHora.length) {
+        datos = tuitsPorHora.map((datosHora) => {
+          const [año, mes, dia, hora] = datosHora._id;
+          return [`${año}-${mes}-${dia}`, hora, datosHora.total];
+        });
+
+        cache.set(id, JSON.stringify(datos));
+
+        return datos;
+      }
     }
   }
 

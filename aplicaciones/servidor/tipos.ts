@@ -11,17 +11,48 @@ export type LlavesCasosPorDia = [
   total: string
 ];
 
-export type CasoPorDia = [
+export type LlavesTuitsPorDia = [
+  /** Fecha */
+  fecha: String,
+  /** Total de tuits */
+  total: Number
+];
+
+export type LlavesTuitsPorHora = [
+  /** Fecha */
+  año: Number,
+  mes: Number,
+  dia: Number,
+  hora: Number
+];
+
+export type CasosPorDia = [
   /** Fecha de notificación */
   fecha: Date,
   /** Total muertos */
-  muertos: number,
+  muertos: Number,
   /** Total de casos */
-  total: number
+  total: Number
 ];
 
-export type DatosCasosPorDia = {
-  /** El orden de las variables en los casos */
-  llaves: LlavesCasosPorDia;
-  casos: CasoPorDia[];
+export type RespuestaCasosPorDia = {
+  _id: Date;
+  muertos: Number;
+  total: Number;
 };
+
+export type RespuestaTuitsPorDia = {
+  _id: LlavesTuitsPorDia;
+  fecha: Date;
+  total: Number;
+};
+
+export type RespuestaTuitsPorHora = {
+  _id: LlavesTuitsPorHora;
+  hora: Number;
+  fecha: Date;
+  total: Number;
+};
+
+export type TuitsPorDia = [dia: String, total: Number];
+export type TuitsPorHora = [dia: String, hora: Number, total: Number];
