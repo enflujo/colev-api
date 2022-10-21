@@ -10,13 +10,13 @@ dayjs.extend(zonaHoraria);
 dayjs.tz.setDefault('America/Bogota');
 dayjs.locale('es');
 
-const servidorUrl = 'http://localhost:8080';
+const servidorUrl = import.meta.env.DEV ? 'http://localhost:8080/tally' : 'https://colev.enflujo.com/tally';
 const muertos = ref([]);
 const fechaInicial = ref(null);
 const fechaFinal = ref(null);
 
 async function obtenerMuertos() {
-  const datos = await fetch(servidorUrl).then((respuesta) => respuesta.json());
+  const datos = await fetch(`${servidorUrl}/casos-por-dia`).then((respuesta) => respuesta.json());
   fechaInicial.value = datos[0][0];
   fechaFinal.value = datos[datos.length - 1][0];
   muertos.value = datos;
@@ -24,7 +24,7 @@ async function obtenerMuertos() {
 }
 
 async function obtenerTweetsPorDia() {
-  const datos = await fetch(`${servidorUrl}/tweets-por-dia`).then((respuesta) => respuesta.json());
+  const datos = await fetch(`${servidorUrl}/tuits-por-dia`).then((respuesta) => respuesta.json());
 
   console.log(datos);
   datos.forEach((dia) => {
@@ -34,7 +34,7 @@ async function obtenerTweetsPorDia() {
 }
 
 async function obtenerTweetsPorHora() {
-  const datos = await fetch(`${servidorUrl}/tweets-por-hora`).then((respuesta) => respuesta.json());
+  const datos = await fetch(`${servidorUrl}/tuits-por-hora`).then((respuesta) => respuesta.json());
   if (datos) {
     console.log(datos);
   }
