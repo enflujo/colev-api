@@ -1,5 +1,10 @@
 # Colev API
 
+![Estilo Código](https://github.com/enflujo/colev-api/actions/workflows/estilo-codigo.yml/badge.svg)
+![Despliegue](https://github.com/enflujo/colev-api/actions/workflows/despliegue.yml/badge.svg)
+![Tamaño](https://img.shields.io/github/repo-size/enflujo/colev-api?color=%235757f7&label=Tama%C3%B1o%20repo&logo=open-access&logoColor=white)
+![Licencia](https://img.shields.io/github/license/enflujo/colev-api?label=Licencia&logo=open-source-initiative&logoColor=white)
+
 Aplicación para extraer, procesar y administrar los datos sobre Covid-19 en Colombia para las diferentes aplicaciones de investigación en el grupo [Colev](https://colev.uniandes.edu.co/) de la Universidad de los Andes.
 
 ## Aplicaciones
