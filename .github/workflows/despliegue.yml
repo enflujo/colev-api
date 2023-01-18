@@ -10,12 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🦅 Actualizar build por SSH
-        uses: appleboy/ssh-action@master
+      - name: 🦅 Actualizar página por SSH
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.DOMINIO }}
           username: ${{ secrets.USUARIO }}
-          password: ${{ secrets.CLAVE }}
+          key: ${{ secrets.LLAVE_SSH }}
           script: |
             export NVM_DIR=~/.nvm
             source ~/.nvm/nvm.sh
