@@ -1,0 +1,8 @@
+{
+  "name": "Colev | Laboratorio EnFlujo",
+  "short_name": "Colev | EnFlujo",
+  "icons": [
+    { "src": "/icono_192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icono_512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

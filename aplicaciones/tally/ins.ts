@@ -14,7 +14,7 @@ const iniciarEnPg = process.env.PAGINA ? +process.env.PAGINA : 0;
 /**
  * La cantidad de casos por petición se procesan en memoria por lo que toca mantenerlo bajo.
  * Entre más alto, el servidor necesita tener más memoria ram para procesarlos.
- * El peso inicial (sin considerar la ram que necesita luego para procesar) se puede estimar con:
+ * El peso inicial (sin considerar la ram que necesita para procesar) se puede estimar con:
  * 10000 alrededor de 6.5mb | 20000 alrededor de 13mb | 50000 alrededor de 32.5mb
  *
  * EL API donde están los datos (SODA) supuestamente no tiene límites desde la versión 2.1.
@@ -28,7 +28,9 @@ console.log(`Iniciando extracción en página ${iniciarEnPg} y modo ${numeroPorP
  * Hace varias peticiones a la API para ir extrayendo y guardando en la base de datos sin saturar la memoria RAM.
  */
 async function extraer(total: number, pagina = iniciarEnPg) {
+  // Revisar si debe empezar en una página en particular, si no se pasa extrae todos los datos.
   if (pagina === iniciarEnPg) {
+    // Inicializar barra de proceso.
     barraProceso.start(total, 0, {
       pagina: iniciarEnPg,
       totalPaginas: Math.ceil(total / numeroPorPagina) - 1,
@@ -43,6 +45,9 @@ async function extraer(total: number, pagina = iniciarEnPg) {
     if (data.length) {
       const datosLimpios: CasoLimpio[] = [];
 
+      /**
+       * Procesar y limpiar bloque de datos.
+       */
       try {
         data.forEach((d: CasoFuente) => {
           const casoLimpio = limpieza(d, llavesSoda);
@@ -53,8 +58,9 @@ async function extraer(total: number, pagina = iniciarEnPg) {
         throw new Error(JSON.stringify(logError(err)));
       }
 
-      const casosProcesados = inicioBloque + data.length;
-
+      /**
+       * Guardar datos procesados en Mongo.
+       */
       try {
         await guardarVarios(datosLimpios, 'casos');
       } catch (err) {
@@ -63,6 +69,10 @@ async function extraer(total: number, pagina = iniciarEnPg) {
         throw new Error(JSON.stringify(logError(`Error en instancia de MongoDB: ${error.code}`, error.message)));
       }
 
+      /**
+       * Actualizar barra de proceso.
+       */
+      const casosProcesados = inicioBloque + data.length;
       barraProceso.update(casosProcesados, { pagina: pagina });
       extraer(total, pagina + 1);
     } else {

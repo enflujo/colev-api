@@ -69,6 +69,7 @@ export const casosPorDia = async (): Promise<CasosPorDia[] | undefined> => {
 
   // Si no encontró nada en el caché, hace el query en mongo.
   if (!datos) {
+    console.log('desde mongo');
     await conectarBd();
 
     // Asegurarse que se pudo conectar a mongo.
@@ -120,6 +121,7 @@ export const tuitsPorDia = async (): Promise<TuitsPorDia[] | undefined> => {
 
   // Si no encontró nada en el caché, hace el query en mongo.
   if (!datos) {
+    console.log('desde mongo');
     await conectarBd();
 
     // Asegurarse que se pudo conectar a mongo.
@@ -167,6 +169,7 @@ export const tuitsPorHora = async (): Promise<TuitsPorHora[] | undefined> => {
   let datos: TuitsPorHora[] | undefined = await responderDesdeCache(id);
 
   if (!datos) {
+    console.log('desde mongo');
     await conectarBd();
 
     if (bd) {
