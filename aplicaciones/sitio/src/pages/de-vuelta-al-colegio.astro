@@ -4,10 +4,64 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
 <Plantilla titulo="¡De Vuelta al Colegio!">
   <main>
-    <h1><span class="text-gradient">¡De Vuelta al Colegio!</span></h1>
+    <section id="introduccion">
+      <h1>¡De Vuelta al Colegio!</h1>
+      <p>subtitulo</p>
+    </section>
+
     <p></p>
     <video controls>
       <source src="/videos/demo-aplicacion.mp4" type="video/mp4" />
     </video>
   </main>
 </Plantilla>
+
+<style lang="scss">
+  @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@900&family=Vollkorn:ital@0;1&display=swap');
+
+  $colorOscuro: rgba(11, 14, 223, 0.6);
+  $colorClaro: #f4f2fd;
+  $fuenteTitulos: 'Titillium Web', sans-serif;
+  $fuente: 'Vollkorn', serif;
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  html {
+    font-family: $fuente;
+    background-color: $colorClaro;
+    color: $colorOscuro;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: $fuenteTitulos;
+    font-weight: 900;
+  }
+
+  h1 {
+    font-size: 3.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+
+  #introduccion {
+    color: $colorClaro;
+    background-color: $colorOscuro;
+    min-height: 50vh;
+    text-align: center;
+
+    h1 {
+      padding-top: 20vh;
+    }
+
+    p {
+      font-style: italic;
+    }
+  }
+</style>
