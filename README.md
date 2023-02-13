@@ -89,7 +89,7 @@ Revisar 1 caso por id: https://www.datos.gov.co/resource/gt2j-8ykr.json?id_de_ca
 
 ### Agregar paquetes a las aplicaciones
 
-Este repositorio contiene varias aplicaciones usando Yarn Worspaces. Para instalar paquetes de NPM se debe dirigir a la aplicación que le corresponde. Por ejemplo:
+Este repositorio contiene varias aplicaciones usando _Yarn Worspaces_. Para instalar paquetes de NPM se debe dirigir a la aplicación que le corresponde. Por ejemplo:
 
 Este comando...
 
