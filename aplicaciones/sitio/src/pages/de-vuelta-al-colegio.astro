@@ -244,7 +244,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   }
 
   h1 {
-    font-size: 3.7em;
+    font-size: 2.5em;
     margin: 0;
     font-weight: 900;
   }
@@ -455,34 +455,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
     }
   }
 
-  .grupo {
-    display: flex;
-    width: 80vw;
-    margin: 0 auto 2em auto;
-    max-width: 1200px;
-
-    .columnaTexto {
-      padding-right: 2em;
-
-      p {
-        width: auto;
-      }
-    }
-
-    .columna1de3 {
-      width: 33.3%;
-    }
-
-    .columna2de3 {
-      width: 66.66%;
-    }
-
-    img {
-      width: 100%;
-      height: auto;
-    }
-  }
-
   video {
     width: 100%;
     height: auto;
@@ -492,5 +464,44 @@ import Plantilla from '../plantillas/Plantilla.astro';
     width: 80vw;
     margin: 0 auto;
     max-width: 1200px;
+  }
+
+  .grupo {
+    img {
+      width: 80vw;
+      height: auto;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    h1 {
+      font-size: 3.7em;
+    }
+    .grupo {
+      display: flex;
+      width: 80vw;
+      margin: 0 auto 2em auto;
+      max-width: 1200px;
+
+      .columnaTexto {
+        padding-right: 2em;
+
+        p {
+          width: auto;
+        }
+      }
+
+      .columna1de3 {
+        width: 33.3%;
+      }
+
+      .columna2de3 {
+        width: 66.66%;
+      }
+
+      img {
+        width: 100%;
+      }
+    }
   }
 </style>
