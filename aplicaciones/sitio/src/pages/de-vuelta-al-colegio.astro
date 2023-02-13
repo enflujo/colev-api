@@ -142,7 +142,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
     <h2>Créditos</h2>
     <ul>
       <li>
-        <h4>Credo por:</h4>
+        <h3>Credo por:</h3>
 
         <a href="https://colev.uniandes.edu.co" target="_blank" rel="noopener noreferrer">
           <img
@@ -153,7 +153,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
       </li>
 
       <li>
-        <h4>Apoyan:</h4>
+        <h3>Apoyan:</h3>
         <a
           href="https://www.idrc.ca/es/lo-que-hacemos/america-latina-y-el-caribe"
           target="_blank"
@@ -170,14 +170,14 @@ import Plantilla from '../plantillas/Plantilla.astro';
       </li>
 
       <li>
-        <h4>Colev forma parte de:</h4>
+        <h3>Colev forma parte de:</h3>
         <a href="https://covidsouth.ai/?lang=es" target="_blank" rel="noopener noreferrer">
           <img src="/imgs/COVIDAI.svg" alt="Logo de COVIDAI." />
         </a>
       </li>
 
       <li>
-        <h4>Aplicaciones desarrolladas por:</h4>
+        <h3>Aplicaciones desarrolladas por:</h3>
         <a
           class="biomac"
           href="https://ingbiomedica.uniandes.edu.co/es/investigacion/lineas-investigacion/biologia-matematica-computacional/"
@@ -253,10 +253,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
   h3 {
     border-bottom: 1px dotted;
     display: inline-block;
-  }
-
-  h4 {
-    padding-top: 0.6em;
   }
 
   .resaltar {
@@ -339,6 +335,12 @@ import Plantilla from '../plantillas/Plantilla.astro';
     text-align: center;
     width: 100vw;
     max-width: 100%;
+
+    h3 {
+      padding-top: 0.6em;
+      display: block;
+      border: none;
+    }
 
     ul {
       margin: 0;
