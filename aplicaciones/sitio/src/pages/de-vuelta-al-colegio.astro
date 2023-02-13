@@ -3,26 +3,201 @@ import Plantilla from '../plantillas/Plantilla.astro';
 ---
 
 <Plantilla titulo="¡De Vuelta al Colegio!">
+  <nav id="menu">
+    <div class="inicioColev"><a href="/"><img src="/imgs/colev.svg" alt="Logo de COLEV." /></a></div>
+
+    <ul>
+      <li><a href="#descripcion">Descripción</a></li>
+      <li><a href="#tecnologia">Tecnología</a></li>
+      <li><a href="#video">Video</a></li>
+      <li><a href="#creditos">Créditos</a></li>
+    </ul>
+  </nav>
+
   <main>
     <section id="introduccion">
       <h1>¡De Vuelta al Colegio!</h1>
-      <p>subtitulo</p>
+
+      <ul><li>Inteligencia Artificial</li><li>Simulación</li><li>Bogotá</li></ul>
+
+      <h2 id="descripcion">Descripción</h2>
+
+      <p>
+        Atendiendo las preocupaciones de la ciudadanía Colombiana con respecto al regreso a la presencialidad tras los
+        periodos de cuarentena por el COVID-19, el equipo de COLEV de la Universidad de los Andes desarrolló esta
+        aplicación que permite a los usuarios simular las probabilidades de contagios en los colegios de Bogotá haciendo
+        uso de un modelo de Inteligencía Artificial fácil de usar.
+      </p>
+
+      <div class="grupo">
+        <div class="columnaTexto columna1de3">
+          <p>
+            Los usuarios pueden introducir a un formulario intuitivo y fácil de usar, las características específicas
+            del colegio como lo son: dimensiones de los salones, número de personas que habitan los espacios, tipos de
+            tapabocas que se usan regularmente, nivel de ventilación y horarios de clases.
+          </p>
+
+          <p>
+            Con esta información, el simulador logra ofrecer una confiable aproximación de las probabilidades de
+            contagio sobre la población que compone el colegio.
+          </p>
+        </div>
+
+        <div class="columna2de3">
+          <img src="/imgs/formulario.webp" alt="Ejemplo del formulario que llenan los usuarios en la página web." />
+        </div>
+      </div>
+
+      <div class="grupo">
+        <div class="columnaTexto columna1de3">
+          <p>El simulador divide la población en los siguientes grupos:</p>
+          <p class="poblacion preescolar">Estudiantes de preescolar.</p>
+          <p class="poblacion primaria">Estudiantes de primaria.</p>
+          <p class="poblacion bachillerato">Estudiantes de bachillerato</p>
+          <p class="poblacion padres">Padres de família.</p>
+          <p class="poblacion otros">Otras personas en posible contacto.</p>
+          <p>
+            En tiempo real, las visualizaciones se van actualizando a lo largo de la simulación para ver el
+            comportamiento del modelo. Todas las personas comienzan en estado de "suceptibles" y se van moviendo hacia
+            "expuestos" cuando entran en contacto con el virus y luego pueden moverse hacia "recuperado" o "infectado".
+          </p>
+        </div>
+
+        <div class="columna columna2de3">
+          <img
+            src="/imgs/población-simulación.webp"
+            alt="Tablero del simulación que muestra los colores para cáda grupo poblacional."
+          />
+        </div>
+      </div>
     </section>
 
-    <p></p>
-    <video controls>
-      <source src="/videos/demo-aplicacion.mp4" type="video/mp4" />
-    </video>
+    <section id="tecnologia" class="seccionContenido">
+      <h2>Tecnología</h2>
+      <p>
+        Las aplicaciones que componen este proyecto están disponibles en repositorios públicos de GitHub para quienes
+        deseen usarlas, modificarlas o reutilizarlas.
+      </p>
+
+      <p>Las aplicaciones se divicen en dos partes:</p>
+      <p>
+        <span class="resaltar">El Servidor</span>: esta escrito en Python y expone un API que recibe los datos del
+        formulario. También abre una conexión por WebSockets para transmitir cáda instancia de la simulación en tiempo
+        real con la página web.
+      </p>
+
+      <p>
+        <span class="resaltar">La Aplicación</span>: Es una página web en HTML, CSS y JavaScript que contiene el
+        formulario y las visualizaciones que se actualizan en tiempo real con los datos que recibe por WebSockets.
+      </p>
+
+      <p>Para más información de como instalar y correr las aplicaciones, ir a los siguientes enlaces de GitHub:</p>
+
+      <ul class="repositorios">
+        <li>
+          <a href="https://github.com/enflujo/colev-colegios-servidor" target="_blank" rel="noopener noreferrer">
+            <span class="icono"><img src="/imgs/servidor.svg" alt="Icono servidor." /></span>
+            <span class="nombre">Servidor</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="https://github.com/enflujo/colev-colegios" target="_blank" rel="noopener noreferrer">
+            <span class="icono"><img src="/imgs/aplicacion-web.svg" alt="Icono aplicación web." /></span>
+            <span class="nombre">Aplicación</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section id="video" class="seccionContenido">
+      <h2>Video</h2>
+
+      <p>Dado que la aplicación no está en línea, aquí les mostramos un video que documenta su funcionamiento.</p>
+
+      <video controls>
+        <source src="/videos/demo-colegios.webm" type="video/webm" />
+        <source src="/videos/demo-colegios.mp4" type="video/mp4" />
+      </video>
+    </section>
   </main>
+
+  <footer id="creditos" class="seccionContenido">
+    <h2>Créditos</h2>
+    <ul>
+      <li>
+        <h4>Credo por:</h4>
+
+        <a href="https://colev.uniandes.edu.co" target="_blank" rel="noopener noreferrer">
+          <img
+            src="/imgs/colev-facultades-v.svg"
+            alt="Logos de facultades en la Universidad de los Andes que participan en Colev."
+          />
+        </a>
+      </li>
+
+      <li>
+        <h4>Apoyan:</h4>
+        <a
+          href="https://www.idrc.ca/es/lo-que-hacemos/america-latina-y-el-caribe"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img src="/imgs/IDRC.svg" alt="Logo de IDRC LATAM." />
+        </a>
+      </li>
+
+      <li>
+        <a href="https://www.sida.se/en" target="_blank" rel="noopener noreferrer">
+          <img src="/imgs/sida.svg" alt="Logo de SIDA." />
+        </a>
+      </li>
+
+      <li>
+        <h4>Colev forma parte de:</h4>
+        <a href="https://covidsouth.ai/?lang=es" target="_blank" rel="noopener noreferrer">
+          <img src="/imgs/COVIDAI.svg" alt="Logo de COVIDAI." />
+        </a>
+      </li>
+
+      <li>
+        <h4>Aplicaciones desarrolladas por:</h4>
+        <a
+          class="biomac"
+          href="https://ingbiomedica.uniandes.edu.co/es/investigacion/lineas-investigacion/biologia-matematica-computacional/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          BIOMAC
+        </a>
+      </li>
+
+      <li>
+        <a href="https://enflujo.com/" target="_blank" rel="noopener noreferrer">
+          <img src="/imgs/logo_enflujo.svg" alt="Logo del Laboratorio EnFlujo." />
+        </a>
+      </li>
+    </ul>
+  </footer>
 </Plantilla>
 
 <style lang="scss">
-  @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@900&family=Vollkorn:ital@0;1&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@700;900&family=Vollkorn:ital@0;1&display=swap');
+
+  ::selection {
+    background-color: #ababfb;
+    color: #000;
+  }
 
   $colorOscuro: rgba(11, 14, 223, 0.6);
   $colorClaro: #f4f2fd;
   $fuenteTitulos: 'Titillium Web', sans-serif;
   $fuente: 'Vollkorn', serif;
+  $colorPreescolar: #ebcb16;
+  $colorPrimaria: #04aa6d;
+  $colorBachillerato: #67b2c4;
+  $colorPadres: rgba(219, 182, 133, 1);
+  $colorOtros: rgb(151, 151, 151);
 
   html,
   body {
@@ -31,8 +206,13 @@ import Plantilla from '../plantillas/Plantilla.astro';
   }
   html {
     font-family: $fuente;
-    background-color: $colorClaro;
-    color: $colorOscuro;
+    color: $colorClaro;
+    background-color: $colorOscuro;
+  }
+
+  ::selection {
+    background-color: #79d380;
+    color: #243a26;
   }
 
   h1,
@@ -40,19 +220,148 @@ import Plantilla from '../plantillas/Plantilla.astro';
   h3,
   h4 {
     font-family: $fuenteTitulos;
-    font-weight: 900;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-top: 3em;
   }
 
   h1 {
     font-size: 3.7em;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
     margin: 0;
+    font-weight: 900;
+  }
+
+  h2,
+  h3 {
+    border-bottom: 1px dotted;
+    display: inline-block;
+  }
+
+  h4 {
+    padding-top: 0.6em;
+  }
+
+  .resaltar {
+    font-weight: bold;
+    border-bottom: 2px solid;
+    letter-spacing: 0.2em;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  main {
+    margin-bottom: 8em;
+  }
+
+  a,
+  a:link {
+    text-decoration: none;
+    color: $colorClaro;
+    font-weight: bold;
+    border-bottom: 1px dotted;
+    transition: all 0.25s ease-in-out;
+    &:hover {
+      opacity: 0.7;
+      border-bottom: 1px solid;
+    }
+  }
+
+  #menu {
+    position: fixed;
+    top: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    z-index: 9;
+    display: flex;
+    align-items: center;
+
+    a,
+    a:link {
+      color: $colorOscuro;
+      font-weight: 700;
+      font-family: $fuenteTitulos;
+      transition: all 0.25s ease-in-out;
+      &:hover {
+        opacity: 0.7;
+      }
+    }
+
+    ul {
+      display: flex;
+      justify-content: center;
+    }
+
+    li {
+      padding: 0 0.3em;
+      cursor: pointer;
+    }
+
+    .inicioColev {
+      margin-right: 2.5em;
+      padding: 0 1em;
+      a,
+      a:link {
+        border: none;
+      }
+      img {
+        height: 23px;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  #creditos {
+    background-color: $colorClaro;
+    color: $colorOscuro;
+    text-align: center;
+    width: 100vw;
+    max-width: 100%;
+
+    ul {
+      margin: 0;
+      padding: 1em 0;
+    }
+
+    li {
+      padding: 1em 0;
+    }
+    img {
+      height: 60px;
+      width: auto;
+      padding: 0 1em;
+      vertical-align: middle;
+    }
+
+    a,
+    a:link {
+      color: $colorOscuro;
+      border: none;
+
+      &.biomac {
+        background-color: #185841;
+        padding: 0.5em;
+        color: white;
+        font-weight: normal;
+      }
+    }
+  }
+
+  p {
+    text-align: left;
+    font-size: 1.2em;
+    width: 80vw;
+    max-width: 1200px;
+    margin: 1.2em auto;
   }
 
   #introduccion {
-    color: $colorClaro;
-    background-color: $colorOscuro;
     min-height: 50vh;
     text-align: center;
 
@@ -60,8 +369,112 @@ import Plantilla from '../plantillas/Plantilla.astro';
       padding-top: 20vh;
     }
 
-    p {
-      font-style: italic;
+    .poblacion {
+      margin: 0.2em auto;
+      &::before {
+        content: '';
+        display: inline-block;
+        width: 0.8em;
+        height: 0.8em;
+        background-color: $colorOtros;
+        vertical-align: middle;
+        margin: 0 0.3em;
+        border-radius: 50%;
+      }
+
+      &.preescolar {
+        &::before {
+          background-color: $colorPreescolar;
+        }
+      }
+
+      &.primaria {
+        &::before {
+          background-color: $colorPrimaria;
+        }
+      }
+
+      &.bachillerato {
+        &::before {
+          background-color: $colorBachillerato;
+        }
+      }
+
+      &.padres {
+        &::before {
+          background-color: $colorPadres;
+        }
+      }
     }
+  }
+
+  .repositorios {
+    display: flex;
+    width: 400px;
+    justify-content: space-around;
+    margin: 0 auto;
+
+    a {
+      border: 1px solid $colorClaro;
+      border-radius: 6px;
+      padding: 1em 0.8em;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease-out;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0);
+        opacity: 1;
+      }
+    }
+
+    span {
+      vertical-align: middle;
+    }
+    .icono {
+      padding-right: 0.8em;
+      img {
+        height: 40px;
+        width: auto;
+      }
+    }
+  }
+
+  .grupo {
+    display: flex;
+    width: 80vw;
+    margin: 0 auto 2em auto;
+    max-width: 1200px;
+
+    .columnaTexto {
+      padding-right: 2em;
+
+      p {
+        width: auto;
+      }
+    }
+
+    .columna1de3 {
+      width: 33.3%;
+    }
+
+    .columna2de3 {
+      width: 66.66%;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  video {
+    width: 100%;
+    height: auto;
+  }
+
+  .seccionContenido {
+    width: 80vw;
+    margin: 0 auto;
+    max-width: 1200px;
   }
 </style>

@@ -21,10 +21,28 @@ import Proyecto from '../components/Proyecto.astro';
 </Plantilla>
 
 <style>
+  html {
+    box-sizing: border-box;
+    line-height: 1.15;
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: inherit;
+    overflow-x: inherit;
+  }
+
+  body {
+    margin: 0;
+  }
   main {
     margin: auto;
     padding: 1.5rem;
     max-width: 60ch;
+    display: block;
   }
   h1 {
     font-size: 3rem;
