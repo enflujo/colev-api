@@ -1,10 +1,14 @@
 ---
 export interface Props {
   titulo: string;
+  descripcion: string;
+  imagen: string;
 }
 
-const { titulo } = Astro.props;
+const { titulo, descripcion, imagen } = Astro.props;
 const ruta = new URL(Astro.url.pathname, Astro.site);
+const cola = '..:: EnFlujo + Colev ::..';
+const tituloPagina = titulo.length ? `${titulo} | ${cola}` : cola;
 ---
 
 <!DOCTYPE html>
@@ -20,6 +24,28 @@ const ruta = new URL(Astro.url.pathname, Astro.site);
 
     <meta name="generator" content={Astro.generator} />
     <title>{titulo}</title>
+    <meta name="description" content={descripcion} />
+
+    <!-- OpenGraph -->
+    <meta property="og:locale" content="es_CO" />
+    <meta property="og:site_name" content="EnFlujo" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={ruta.href} />
+    <meta property="og:title" content={tituloPagina} />
+    <meta property="og:description" content={descripcion} />
+    <meta property="og:image" content={imagen} />
+    <meta property="og:image:alt" content={tituloPagina} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="627" />
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@labenflujo" />
+    <meta name="twitter:creator" content="@labenflujo" />
+    <meta name="twitter:url" content={ruta.href} />
+    <meta name="twitter:title" content={tituloPagina} />
+    <meta name="twitter:description" content={descripcion} />
+    <meta name="twitter:image" content={imagen} />
+    <meta name="twitter:image:alt" content={tituloPagina} />
   </head>
   <body>
     <slot />
