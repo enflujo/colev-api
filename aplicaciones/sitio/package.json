@@ -7,12 +7,15 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "yarn build && astro preview",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/sitemap": "^1.0.1",
     "astro": "^2.0.6",
+    "astro-compress": "^1.1.32",
+    "astro-critters": "^1.1.29",
+    "astro-robots-txt": "^0.3.12",
     "autoprefixer": "^10.4.13",
     "dayjs": "^1.11.7"
   },
