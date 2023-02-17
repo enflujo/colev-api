@@ -1,9 +1,11 @@
 import 'dotenv/config';
 import fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import { rutaCasosPorDia } from './rutas/ins';
+import { rutaCasosPorDia } from './rutas/insCasosPorDia';
 import { rutaBorrarCache } from './rutas/cache';
-import { rutaTuitsPorDia, rutaTuitsPorHora } from './rutas/twitter';
+import { rutaTendencias } from './rutas/twitter';
+import { rutaTuitsPorDia } from './rutas/tuitsPorDia';
+import { rutaTuitsPorHora } from './rutas/tuitsPorHora';
 
 const servidor: FastifyInstance = fastify();
 const PUERTO = process.env.API_PUERTO ? +process.env.API_PUERTO : 8080;
@@ -16,6 +18,7 @@ servidor.register(rutaCasosPorDia, { prefix: '/tally' });
 servidor.register(rutaBorrarCache, { prefix: '/tally' });
 servidor.register(rutaTuitsPorDia, { prefix: '/tally' });
 servidor.register(rutaTuitsPorHora, { prefix: '/tally' });
+servidor.register(rutaTendencias, { prefix: '/tally' });
 
 const inicio = async () => {
   try {

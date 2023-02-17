@@ -1,7 +1,9 @@
-import { Db, MongoClient } from 'mongodb';
+import { Db, Document, MongoClient } from 'mongodb';
 import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import ms from 'ms';
+import palabras from './esp';
+
 import {
   CasosPorDia,
   RespuestaCasosPorDia,
@@ -21,7 +23,7 @@ const cache = new Keyv({
 
 const nombreBd = 'colev';
 
-const colecciones = {
+export const colecciones = {
   casos: 'casos',
   tuits: 'tuits',
   tuitsRelacionados: 'tuits-relacionados',
@@ -42,14 +44,18 @@ export const conectarBd = async (): Promise<Db> => {
   return bd;
 };
 
-const responderDesdeCache = async (id: string) => {
+export const borrarCache = async (llave: string) => {
+  return await cache.delete(llave);
+};
+
+const responderDesdeCache = async (llave: string) => {
   // USAR_CACHE se define en el archivo .env para poderlo desactivar con facilidad.
   if (USAR_CACHE === 'true') {
     // Acá están los datos guardados si no ha pasado el tiempo que se define en ttl y ya se guardó el resultado con este id.
-    const datosGuardados = await cache.get(id);
+    const datosGuardados = await cache.get(llave);
 
     if (datosGuardados) {
-      console.log('desde cache');
+      console.log('desde cache', llave);
       return JSON.parse(datosGuardados);
     }
   }
@@ -58,163 +64,90 @@ const responderDesdeCache = async (id: string) => {
 };
 
 /**
+ *
+ * @param llave El identificador que se usa para buscar en el caché o guardar el resultado de mongo.
+ * @param busqueda Función que hace la búsqueda en mongo.
+ * @returns
+ */
+export const peticion = async (llave: string, busqueda: (db: Db) => Promise<Document> | null) => {
+  // Buscar datos en caché y si existen devolverlos inmediatamente.
+  const datos = await responderDesdeCache(llave);
+  if (datos) return datos;
+
+  // Si no encontró nada en el caché, hace el query en mongo.
+  console.log('desde mongo:', llave);
+  // Asegurarse que se pudo conectar a mongo.
+  await conectarBd();
+
+  if (bd) {
+    const datos = await busqueda(bd);
+
+    if (datos) {
+      // Guardar el resultado en caché para que estén disponibles en los siguientes llamados a esta función.
+      cache.set(llave, JSON.stringify(datos));
+      return datos;
+    }
+    return null;
+  }
+  return null;
+};
+
+/**
  * Rutas
  */
-export const casosPorDia = async (): Promise<CasosPorDia[] | undefined> => {
-  // Este id se usa para buscar en el caché o guardar el resultado de mongo.
-  const id = 'casosPorDia';
 
-  // Definir variable de datos que pueden salir del caché o de mongo.
-  let datos: CasosPorDia[] | undefined = await responderDesdeCache(id);
+export const tendencias = async (): Promise<Document | undefined> => {
+  const id = 'tendencias';
 
-  // Si no encontró nada en el caché, hace el query en mongo.
+  const datos: TuitsPorHora[] | undefined = await responderDesdeCache(id);
+  console.log('no hay cache aún');
   if (!datos) {
-    console.log('desde mongo');
-    await conectarBd();
-
-    // Asegurarse que se pudo conectar a mongo.
-    if (bd) {
-      // Definir desde cual colección se extraen los datos.
-      const coleccion = bd.collection(colecciones.casos);
-
-      // Query
-      const casos = (await coleccion
-        .aggregate([
-          {
-            $group: {
-              _id: '$fechaNot',
-              total: { $sum: 1 },
-              muertos: {
-                $sum: {
-                  $cond: [{ $eq: ['$recuperado', 'fallecido'] }, 1, 0],
-                },
-              },
-            },
-          },
-          {
-            $sort: { _id: 1 },
-          },
-        ])
-        .toArray()) as RespuestaCasosPorDia[];
-
-      // Aplanar respuesta de objetos a arrays para que sea la menor cantidad de bits que se mandan desde la API.
-      if (casos && casos.length) {
-        datos = casos.map((obj): CasosPorDia => [obj._id, obj.muertos, obj.total]);
-
-        // Guardar el resultado en caché para que estén disponibles en los siguientes llamados a esta función.
-        cache.set(id, JSON.stringify(datos));
-
-        return datos;
-      }
-    }
-  }
-
-  return datos;
-};
-
-export const tuitsPorDia = async (): Promise<TuitsPorDia[] | undefined> => {
-  // Este id se usa para buscar en el caché o guardar el resultado de mongo.
-  const id = 'tuitsPorDia';
-
-  // Definir variable de datos que pueden salir del caché o de mongo.
-  let datos: TuitsPorDia[] | undefined = await responderDesdeCache(id);
-
-  // Si no encontró nada en el caché, hace el query en mongo.
-  if (!datos) {
-    console.log('desde mongo');
-    await conectarBd();
-
-    // Asegurarse que se pudo conectar a mongo.
-    if (bd) {
-      // Definir desde cual colección se extraen los datos.
-      const coleccion = bd.collection(colecciones.tuits);
-      const tuitsPorDia = (await coleccion
-        .aggregate([
-          {
-            $project: {
-              a: { $year: '$created_at' },
-              m: { $month: '$created_at' },
-              d: { $dayOfMonth: '$created_at' },
-              fecha: '$created_at',
-              tweet: 1,
-            },
-          },
-          {
-            $group: {
-              _id: ['$a', '$m', '$d'],
-              fecha: { $first: '$fecha' },
-              total: { $sum: 1 },
-            },
-          },
-          {
-            $sort: { fecha: 1 },
-          },
-        ])
-        .toArray()) as RespuestaTuitsPorDia[];
-
-      if (tuitsPorDia && tuitsPorDia.length) {
-        datos = tuitsPorDia.map((datosDia) => [datosDia._id.join('-'), datosDia.total]);
-        cache.set(id, JSON.stringify(datos));
-
-        return datos;
-      }
-    }
-  }
-
-  return datos;
-};
-
-export const tuitsPorHora = async (): Promise<TuitsPorHora[] | undefined> => {
-  const id = 'tuitsPorHora';
-  let datos: TuitsPorHora[] | undefined = await responderDesdeCache(id);
-
-  if (!datos) {
-    console.log('desde mongo');
+    console.log('tendencias desde mongo');
     await conectarBd();
 
     if (bd) {
       const coleccion = bd.collection(colecciones.tuits);
-      const tuitsPorHora = (await coleccion
+      console.log();
+      const reglas = `\\b(?!(?:${palabras.join('|')})\\b)\\w+`;
+
+      return await coleccion
         .aggregate([
-          {
-            $project: {
-              a: { $year: '$created_at' },
-              m: { $month: '$created_at' },
-              d: { $dayOfMonth: '$created_at' },
-              h: { $hour: '$created_at' },
-              fecha: '$created_at',
-              tweet: 1,
-            },
-          },
-          {
-            $group: {
-              _id: ['$a', '$m', '$d', '$h'],
-              fecha: { $first: '$fecha' },
-              total: { $sum: 1 },
-            },
-          },
-          {
-            $sort: { fecha: 1 },
-          },
+          // {
+          //   $addFields: {
+          //     palabras: {
+          //       $map: {
+          //         input: {
+          //           $split: ['$text', ' '],
+          //         },
+          //         as: 'str',
+          //         in: {
+          //           $trim: { input: { $toLower: ['$$str'] }, chars: ' ,|(){}-<>.;' },
+          //         },
+          //       },
+          //     },
+          //   },
+          // },
+          // { $unwind: '$palabras' },
+          // {
+          //   $match: {
+          //     palabras: {
+          //       $nin: spa,
+          //     },
+          //   },
+          // },
+
+          { $match: { $expr: { $eq: [{ $type: '$text' }, 'string'] } } },
+          { $set: { palabras: { $regexFindAll: { input: '$text', regex: reglas } } } },
+          { $project: { tokens: '$palabras.match' } },
+          { $unwind: { path: '$tokens' } },
+          { $group: { _id: '$tokens', count: { $sum: 1 } } },
+          { $set: { word: '$_id', _id: '$$REMOVE' } },
+          { $sort: { count: -1 } },
+          { $limit: 200 },
         ])
-        .toArray()) as RespuestaTuitsPorHora[];
-
-      if (tuitsPorHora && tuitsPorHora.length) {
-        datos = tuitsPorHora.map((datosHora) => {
-          const [año, mes, dia, hora] = datosHora._id;
-          return [`${año}-${mes}-${dia}`, hora, datosHora.total];
-        });
-
-        cache.set(id, JSON.stringify(datos));
-
-        return datos;
-      }
+        .toArray();
     }
   }
 
   return datos;
-};
-
-export const borrarCache = async (llave: string) => {
-  return await cache.delete(llave);
 };

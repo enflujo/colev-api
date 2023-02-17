@@ -24,6 +24,12 @@ import Proyecto from '../components/Proyecto.astro';
   </main>
 </Plantilla>
 
+<script>
+  const servidorUrl = 'http://localhost:8080/tally';
+  const datos = await fetch(`${servidorUrl}/tuits-por-hora`).then((respuesta) => respuesta.json());
+  console.log(datos);
+</script>
+
 <style>
   html {
     box-sizing: border-box;

@@ -1511,6 +1511,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/stopword@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@types/stopword/-/stopword-2.0.0.tgz#753e8b6a043d38b91eecbd9862e9d122a2b5d28d"
+  integrity sha512-R9g+FLEFzxRANryn5f2Beg7WMMopGBNI6Ghi3+8WrOZL7C063db0VuVrEpbKrML8o6sOryNN81ms9waSJITJqw==
+
 "@types/unist@*", "@types/unist@^2.0.0":
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/@types/unist/-/unist-2.0.6.tgz#250a7b16c3b91f672a24552ec64678eeb1d3a08d"
@@ -5073,6 +5078,16 @@ standard-as-callback@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/standard-as-callback/-/standard-as-callback-2.1.0.tgz#8953fc05359868a77b5b9739a665c5977bb7df45"
   integrity sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==
+
+stopword@^2.0.7:
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/stopword/-/stopword-2.0.7.tgz#8bd333a05e69cd6009f803f95dab4ce47da95ff3"
+  integrity sha512-s+uLKAxrproCLrq0Wcd3JAIjlJLx6l80b2Rzt0u8+ra5SzGkHnNG8PS3DfGmYk2TrKePDVLL4SdKYwKpgSLc+w==
+
+stopwords-es@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/stopwords-es/-/stopwords-es-0.3.0.tgz#08db5e90ff4382e4be7801473e92aeb887892960"
+  integrity sha512-lmD0/R3f3ZVkBkBYbW6XgH1YH9QW+mc8J43YkBBK/d8z6tF+2QdoiWcDzC8YtLkM/dYyHjIAIiKFz8OyAtZ/dw==
 
 streamsearch@^1.1.0:
   version "1.1.0"
