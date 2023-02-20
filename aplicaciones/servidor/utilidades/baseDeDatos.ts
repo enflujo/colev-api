@@ -4,20 +4,13 @@ import KeyvRedis from '@keyv/redis';
 import ms from 'ms';
 import palabras from './esp';
 
-import {
-  CasosPorDia,
-  RespuestaCasosPorDia,
-  RespuestaTuitsPorDia,
-  RespuestaTuitsPorHora,
-  TuitsPorDia,
-  TuitsPorHora,
-} from '../tipos';
+import { TuitsPorHora } from '../tipos';
 
 const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO } = process.env;
 const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
 const cache = new Keyv({
   store: new KeyvRedis(`redis://localhost:${CACHE_PUERTO}`),
-  // ttl: ms('15s'),
+  ttl: ms('15s'),
   namespace: 'colev-api-cache',
 });
 
@@ -110,7 +103,7 @@ export const tendencias = async (): Promise<Document | undefined> => {
       console.log();
       const reglas = `\\b(?!(?:${palabras.join('|')})\\b)\\w+`;
 
-      return await coleccion
+      const datos = await coleccion
         .aggregate([
           // {
           //   $addFields: {
@@ -135,17 +128,72 @@ export const tendencias = async (): Promise<Document | undefined> => {
           //     },
           //   },
           // },
+          {
+            $project: {
+              a: { $year: '$created_at' }, // Año
+              mes: { $month: '$created_at' }, // Mes
+              semana: { $week: '$created_at' }, // Semana del año
+              palabras: {
+                $map: {
+                  input: { $split: ['$text', ' '] },
+                  as: 'palabra',
+                  in: {
+                    $trim: {
+                      input: { $toLower: ['$$palabra'] },
+                      chars: ' ,|(){}-<>.;"',
+                    },
+                  },
+                },
 
-          { $match: { $expr: { $eq: [{ $type: '$text' }, 'string'] } } },
-          { $set: { palabras: { $regexFindAll: { input: '$text', regex: reglas } } } },
-          { $project: { tokens: '$palabras.match' } },
-          { $unwind: { path: '$tokens' } },
-          { $group: { _id: '$tokens', count: { $sum: 1 } } },
-          { $set: { word: '$_id', _id: '$$REMOVE' } },
-          { $sort: { count: -1 } },
-          { $limit: 200 },
+                $filter: {
+                  input: '$palabras',
+                  as: 'palabra',
+                  cond: { $ne: ['$$palabra', ''] },
+                },
+              },
+              fecha: '$created_at', // Fecha del tuit
+            },
+          },
+          // {
+          //   $addFields: {
+          //     palabras: {
+          //       $map: {
+          //         input: { $split: ['$texto', ' '] },
+          //         as: 'str',
+          //         in: {
+          //           $trim: {
+          //             input: { $toLower: ['$$str'] },
+          //             chars: ' ,|(){}-<>.;"',
+          //           },
+          //         },
+          //       },
+          //     },
+          //   },
+          // },
+          // {
+          //   $group: {
+          //     _id: ['$a', '$mes', '$semana'], // el identificador tiene la estructura que lo hace único: [año, mes, semana].
+          //     palabras: { $push: '$palabras' },
+          //     fecha: { $first: '$fecha' }, // pasamos la primera fecha de la semana para ordenar en el paso siguiente.
+          //     total: { $sum: 1 }, // Contador de la semana
+          //   },
+          // },
+
+          // {
+          //   $sort: { fecha: 1 }, // Ordenar por fechas.
+          // },
+          // { $match: { $expr: { $eq: [{ $type: '$text' }, 'string'] } } },
+          // { $set: { palabras: { $regexFindAll: { input: '$text', regex: reglas } } } },
+          // { $project: { tokens: '$palabras.match' } },
+          // { $unwind: { path: '$tokens' } },
+          // { $group: { _id: '$tokens', count: { $sum: 1 } } },
+          // { $set: { word: '$_id', _id: '$$REMOVE' } },
+          // { $sort: { count: -1 } },
+          // { $limit: 200 },
         ])
         .toArray();
+
+      console.log(datos);
     }
   }
 

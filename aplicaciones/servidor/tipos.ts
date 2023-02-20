@@ -2,6 +2,12 @@
  * Datos del api
  */
 
+interface LlavesFechaBase {
+  año: Number;
+  mes: Number;
+  dia: Number;
+}
+
 export type LlavesCasosPorDia = [
   /** Fecha de Notificación */
   fecha: string,
@@ -24,6 +30,13 @@ export type LlavesTuitsPorHora = [
   mes: Number,
   dia: Number,
   hora: Number
+];
+
+export type LlavesTuitsPorSemana = [
+  /** Fecha */
+  año: Number,
+  mes: Number,
+  semana: Number
 ];
 
 export type CasosPorDia = [
@@ -54,5 +67,13 @@ export type RespuestaTuitsPorHora = {
   total: Number;
 };
 
+export type RespuestaTuitsPorSemana = {
+  _id: LlavesTuitsPorSemana;
+  semana: Number;
+  fecha: Date;
+  total: Number;
+};
+
 export type TuitsPorDia = [dia: String, total: Number];
 export type TuitsPorHora = [dia: String, hora: Number, total: Number];
+export type TuitsPorSemana = [dia: String, semana: Number, total: Number];
