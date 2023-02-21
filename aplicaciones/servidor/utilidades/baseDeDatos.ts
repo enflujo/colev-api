@@ -3,6 +3,7 @@ import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import ms from 'ms';
 import palabras from './esp';
+import { WordTokenizer, AggressiveTokenizerEs, PorterStemmerEs } from 'natural';
 
 import { TuitsPorHora } from '../tipos';
 
@@ -13,6 +14,9 @@ const cache = new Keyv({
   ttl: ms('15s'),
   namespace: 'colev-api-cache',
 });
+
+const extractor = new WordTokenizer();
+const extractorEsp = new AggressiveTokenizerEs();
 
 const nombreBd = 'colev';
 
@@ -89,6 +93,10 @@ export const peticion = async (llave: string, busqueda: (db: Db) => Promise<Docu
  * Rutas
  */
 
+function estadoInicial() {
+  return [];
+}
+
 export const tendencias = async (): Promise<Document | undefined> => {
   const id = 'tendencias';
 
@@ -101,7 +109,7 @@ export const tendencias = async (): Promise<Document | undefined> => {
     if (bd) {
       const coleccion = bd.collection(colecciones.tuits);
       console.log();
-      const reglas = `\\b(?!(?:${palabras.join('|')})\\b)\\w+`;
+      const reglas = `\\w+`;
 
       const datos = await coleccion
         .aggregate([
@@ -130,30 +138,22 @@ export const tendencias = async (): Promise<Document | undefined> => {
           // },
           {
             $project: {
-              a: { $year: '$created_at' }, // Año
+              año: { $year: '$created_at' }, // Año
               mes: { $month: '$created_at' }, // Mes
               semana: { $week: '$created_at' }, // Semana del año
-              palabras: {
-                $map: {
-                  input: { $split: ['$text', ' '] },
-                  as: 'palabra',
-                  in: {
-                    $trim: {
-                      input: { $toLower: ['$$palabra'] },
-                      chars: ' ,|(){}-<>.;"',
-                    },
-                  },
-                },
-
-                $filter: {
-                  input: '$palabras',
-                  as: 'palabra',
-                  cond: { $ne: ['$$palabra', ''] },
-                },
-              },
+              texto: '$text',
               fecha: '$created_at', // Fecha del tuit
             },
           },
+          // { $unwind: '$palabras' },
+          // {
+          //   $match: {
+          //     palabras: {
+          //       $nin: [''],
+          //     },
+          //   },
+          // },
+
           // {
           //   $addFields: {
           //     palabras: {
@@ -193,7 +193,21 @@ export const tendencias = async (): Promise<Document | undefined> => {
         ])
         .toArray();
 
-      console.log(datos);
+      const semanas = datos.reduce((estado, { año, semana, texto }) => {
+        const indice = estado.findIndex((obj: any) => obj.año === año && obj.semana === semana);
+        const palabras = extractorEsp.tokenize(texto.toLowerCase());
+
+        if (indice < 0) {
+          estado.push({ año, semana, palabras: new Set(palabras) });
+        } else {
+          estado[indice].palabras = [...new Set([...estado[indice].palabras, ...palabras])];
+        }
+
+        return estado;
+      }, []);
+      console.log(semanas.length);
+      return semanas;
+      // console.log(datos);
     }
   }
 
