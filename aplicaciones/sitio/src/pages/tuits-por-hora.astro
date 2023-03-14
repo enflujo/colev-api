@@ -1,0 +1,125 @@
+---
+import Plantilla from '../plantillas/Plantilla.astro';
+---
+
+<Plantilla
+  titulo=""
+  descripcion="Proyectos de visualización de datos para Colev desarrollados por el Laboratorio EnFlujo."
+  imagen="https://colev.enflujo.com/imgs/colev-enflujo_og.webp"
+>
+  <main>
+    <div id="contenedor"></div>
+  </main>
+</Plantilla>
+
+<script>
+  import dayjs from 'dayjs';
+  import utc from 'dayjs/plugin/utc';
+  import zonaHoraria from 'dayjs/plugin/timezone';
+  import {
+    area,
+    axisBottom,
+    axisLeft,
+    axisRight,
+    bisector,
+    line,
+    max,
+    scaleLinear,
+    scaleTime,
+    select,
+    timeWeek,
+  } from 'd3';
+
+  dayjs.extend(utc);
+  dayjs.extend(zonaHoraria);
+  dayjs.tz.setDefault('America/Bogota');
+
+  const zona = 'America/Bogota';
+  const servidorUrl = 'http://localhost:8080/tally';
+  const datos = await fetch(`${servidorUrl}/tuits-por-hora`).then((respuesta) => respuesta.json());
+
+  const fechaInicial = dayjs.tz(datos[0][0], zona);
+  const fechaFinal = dayjs.tz(datos[datos.length - 1][0], zona);
+  const totalMs = fechaFinal.unix() - fechaInicial.unix();
+  const dims = { ancho: 0, alto: 0, margenHor: 100, margenVer: 50 };
+
+  const contenedor = select('#contenedor');
+  const svg = contenedor.append('svg').attr('id', 'grafica');
+  const indicadorX = svg.append('g').attr('class', 'eje').attr('id', 'ejeX').style('marginLeft', `${dims.margenHor}px`);
+  const indicadorY = svg.append('g').attr('class', 'eje').attr('id', 'ejeY');
+  const linea = svg.append('path').attr('class', 'lineaPrincipal').attr('id', 'lineaPrincipal').attr('stroke', 'black');
+  const ejeX = scaleTime();
+  const ejeY = scaleLinear();
+
+  const interseccionX = bisector((d) => d[0]).left;
+  const attrLinea = (grupo) => grupo.attr('d', area(posX, posY, dims.alto));
+
+  const posX = (d) => ejeX(d[0]);
+  const posY = (d) => ejeY(d[2]);
+
+  actualisDimensiones();
+  actualizarEjeX();
+  actualizarEjeY();
+  console.log(dims);
+  svg.attr('width', dims.ancho).attr('height', dims.alto);
+
+  function actualizarEjeX(duracion = 500) {
+    ejeX.domain([fechaInicial, fechaFinal]).range([0, dims.ancho]);
+    indicadorX
+      .transition()
+      .duration(duracion)
+      .call(axisBottom(ejeX).ticks(timeWeek.every(4)));
+  }
+
+  function actualizarEjeY(duracion = 500) {
+    ejeY.domain([0, max(datos.map((obj) => obj[2]))]).range([dims.alto - dims.margenHor, 0]);
+    indicadorY.transition().duration(duracion).call(axisRight(ejeY));
+  }
+
+  function actualisDimensiones() {
+    dims.ancho = window.innerWidth;
+    dims.alto = window.innerHeight;
+    indicadorX.attr('transform', `translate(${dims.margenHor}, ${dims.margenVer})`);
+    indicadorY.attr('transform', `translate(${dims.margenHor / 2}, ${dims.margenVer})`);
+  }
+
+  linea.datum(
+    datos.map((d) => {
+      d[0] = new Date(d[0]);
+      return d;
+    })
+  );
+  attrLinea(linea);
+
+  console.log(datos, fechaInicial, fechaFinal, totalMs, fechaFinal.hour());
+</script>
+
+<style>
+  html {
+    box-sizing: border-box;
+    height: 100%;
+  }
+
+  *,
+  *:before,
+  *:after {
+    box-sizing: inherit;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  ::selection {
+    background-color: #9cadac9a;
+    color: #e2e2e2;
+  }
+
+  .lineaPrincipal {
+    stroke: red;
+    /* fill: rgba(255, 255, 255, 0.7);
+    clip-path: url(#clip); */
+  }
+</style>

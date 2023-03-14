@@ -4,7 +4,7 @@ import { RespuestaTuitsPorHora, TuitsPorHora } from '../tipos';
 import { colecciones, peticion } from '../utilidades/baseDeDatos';
 
 const tuitsPorHora = async (): Promise<TuitsPorHora[] | undefined> => {
-  return peticion('tuitsPorHora', (bd: Db) => {
+  return peticion('tuits-por-hora', (bd: Db) => {
     return new Promise(async (resolver) => {
       const coleccion = bd.collection(colecciones.tuits);
       const tuitsPorHora = (await coleccion

@@ -3,7 +3,7 @@ version: '3.8'
 services:
   bd:
     container_name: colev-api-bd
-    image: mongo
+    image: mongo:5.0.9
     restart: unless-stopped
     networks:
       - colev-api
