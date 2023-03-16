@@ -4,7 +4,7 @@ import { RespuestaTuitsPorHora, TuitsPorHora } from '../tipos';
 import { colecciones, peticion } from '../utilidades/baseDeDatos';
 
 const tuitsPorHora = async (): Promise<TuitsPorHora[] | undefined> => {
-  return peticion('tuits-por-hora', (bd: Db) => {
+  return peticion('tweetsPorHora', (bd: Db) => {
     return new Promise(async (resolver) => {
       const coleccion = bd.collection(colecciones.tuits);
       const tuitsPorHora = (await coleccion
@@ -35,7 +35,7 @@ const tuitsPorHora = async (): Promise<TuitsPorHora[] | undefined> => {
       if (tuitsPorHora && tuitsPorHora.length) {
         const datos = tuitsPorHora.map((datosHora) => {
           const [año, mes, dia, hora] = datosHora._id;
-          return [`${año}-${mes}-${dia}`, hora, datosHora.total];
+          return [`${año}-${mes}-${dia}`, +hora, +datosHora.total];
         });
 
         resolver(datos);

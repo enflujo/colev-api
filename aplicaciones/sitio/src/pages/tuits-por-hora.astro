@@ -9,6 +9,9 @@ import Plantilla from '../plantillas/Plantilla.astro';
 >
   <main>
     <div id="contenedor"></div>
+    <input id="rangoSemanas" type="range" min="1" name="semanas" value="1" step="1" />
+    <label for="semanas">Semana</label>
+    <span id="valorSemana">1</span>
   </main>
 </Plantilla>
 
@@ -17,18 +20,32 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import utc from 'dayjs/plugin/utc';
   import zonaHoraria from 'dayjs/plugin/timezone';
   import {
-    area,
+    ascending,
     axisBottom,
-    axisLeft,
     axisRight,
-    bisector,
+    brushX,
+    create,
+    easeLinear,
+    extent,
+    group,
+    interpolate,
+    interpolatePiYG,
     line,
     max,
+    min,
+    scaleBand,
     scaleLinear,
+    scaleOrdinal,
+    scaleSequential,
     scaleTime,
+    schemeAccent,
     select,
+    ticks,
+    timeDays,
     timeWeek,
   } from 'd3';
+
+  import { TuitsPorHora } from '../tipos';
 
   dayjs.extend(utc);
   dayjs.extend(zonaHoraria);
@@ -36,62 +53,241 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
   const zona = 'America/Bogota';
   const servidorUrl = 'http://localhost:8080/tally';
-  const datos = await fetch(`${servidorUrl}/tuits-por-hora`).then((respuesta) => respuesta.json());
+  let fechaInicial;
+  let fechaFinal;
+  let dias;
+  let dia2;
+  const datos: TuitsPorHora[] = await fetch(`${servidorUrl}/tuits-por-hora`)
+    .then((respuesta) => respuesta.json())
+    .then((datos) => {
+      fechaInicial = dayjs.tz(datos[0][0], zona);
+      fechaFinal = dayjs.tz(datos[datos.length - 1][0], zona);
+      dias = fechaFinal.diff(fechaInicial, 'day');
+      let dia = 0;
 
-  const fechaInicial = dayjs.tz(datos[0][0], zona);
-  const fechaFinal = dayjs.tz(datos[datos.length - 1][0], zona);
-  const totalMs = fechaFinal.unix() - fechaInicial.unix();
-  const dims = { ancho: 0, alto: 0, margenHor: 100, margenVer: 50 };
+      return datos.map((d: [fecha: string, hora: number, cantidad: number]): TuitsPorHora => {
+        const fecha = new Date(d[0]);
+        fecha.setHours(d[1]);
 
+        dia = d[1] === 0 ? dia + 1 : dia;
+        if (dia === 2 && d[1] === 0) {
+          dia2 = dayjs.tz(d[0], zona);
+        }
+
+        return [fecha, d[2], dia];
+      });
+    });
+
+  console.log(datos);
+
+  // const dims = { ancho: 0, alto: 0, margenHor: 100, margenVer: 50 };
+
+  // const contenedor = select('#contenedor');
+  // const svg = contenedor.append('svg').attr('id', 'grafica');
+  // const vis = svg.append('g');
+  // const indicadorX = svg.append('g').attr('class', 'eje').attr('id', 'ejeX');
+  // const indicadorY = svg.append('g').attr('class', 'eje').attr('id', 'ejeY');
+  // const ejeX = scaleTime();
+  // const ejeY = scaleLinear();
+
+  // actualisDimensiones();
+  // actualizarEjeX();
+  // actualizarEjeY();
+
+  // const constructorLinea = line()
+  //   .x((d) => ejeX(d[0]))
+  //   .y((d) => ejeY(d[1]));
+
+  // const linea = vis
+  //   .append('path')
+  //   .datum(datos)
+  //   .attr('class', 'lineaPrincipal')
+  //   .attr('id', 'lineaPrincipal')
+  //   .attr('stroke', 'black')
+  //   .attr('fill', 'none')
+  //   .attr('d', constructorLinea);
+
+  // function actualizarEjeX(duracion = 500) {
+  //   ejeX.domain([fechaInicial, fechaFinal]).range([0, dims.ancho - 20]);
+  //   indicadorX.transition().duration(duracion).call(axisBottom(ejeX));
+  // }
+
+  // function actualizarEjeY(duracion = 500) {
+  //   const maximo = max(datos.map((obj) => obj[1]));
+  //   if (!maximo) return;
+  //   ejeY.domain([0, maximo]).range([dims.alto - 20, 0]);
+  //   indicadorY.transition().duration(duracion).call(axisLeft(ejeY));
+  // }
+
+  // function actualisDimensiones() {
+  //   dims.ancho = window.innerWidth - dims.margenHor * 2;
+  //   dims.alto = window.innerHeight - dims.margenVer * 2;
+  //   svg
+  //     .attr('width', dims.ancho)
+  //     .attr('height', dims.alto)
+  //     .attr('transform', `translate(${dims.margenHor},${dims.margenVer})`);
+  //   vis.attr('transform', `translate(20, 0)`);
+  //   indicadorX.attr('transform', `translate(20, ${dims.alto - 20})`);
+  //   indicadorY.attr('transform', `translate(20, 0)`);
+  // }
+
+  const margin = { top: 20, right: 30, bottom: 34, left: 30 };
+  const height = 500;
+  const width = window.innerWidth - margin.left - margin.right;
+  const delay = 250;
   const contenedor = select('#contenedor');
-  const svg = contenedor.append('svg').attr('id', 'grafica');
-  const indicadorX = svg.append('g').attr('class', 'eje').attr('id', 'ejeX').style('marginLeft', `${dims.margenHor}px`);
-  const indicadorY = svg.append('g').attr('class', 'eje').attr('id', 'ejeY');
-  const linea = svg.append('path').attr('class', 'lineaPrincipal').attr('id', 'lineaPrincipal').attr('stroke', 'black');
-  const ejeX = scaleTime();
-  const ejeY = scaleLinear();
+  const rangoSemanas = document.getElementById('rangoSemanas');
+  const valorSemana = document.getElementById('valorSemana');
+  const maximo = max(datos, (d) => d[1]) as number;
+  const x = scaleTime()
+    .domain([fechaInicial.toDate(), fechaFinal.toDate()])
+    .range([0, width - margin.right]);
 
-  const interseccionX = bisector((d) => d[0]).left;
-  const attrLinea = (grupo) => grupo.attr('d', area(posX, posY, dims.alto));
+  const y = scaleLinear()
+    .domain([0, maximo])
+    .range([height - margin.bottom, margin.top]);
+  const anchoBarra = x(datos[1][0]);
 
-  const posX = (d) => ejeX(d[0]);
-  const posY = (d) => ejeY(d[2]);
+  const svg = contenedor
+    .append('svg')
+    .attr('viewBox', [0, 0, width, height])
+    .attr('width', width)
+    .attr('height', height)
+    .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-  actualisDimensiones();
-  actualizarEjeX();
-  actualizarEjeY();
-  console.log(dims);
-  svg.attr('width', dims.ancho).attr('height', dims.alto);
+  const semana = svg.append('g').attr('clip-path', 'url(#clip)');
 
-  function actualizarEjeX(duracion = 500) {
-    ejeX.domain([fechaInicial, fechaFinal]).range([0, dims.ancho]);
-    indicadorX
-      .transition()
-      .duration(duracion)
-      .call(axisBottom(ejeX).ticks(timeWeek.every(4)));
+  const color = scaleSequential(interpolatePiYG);
+
+  const xAxis = (g) => g.attr('transform', `translate(0,${height - margin.bottom})`).call(axisBottom(x));
+  // .call((g) =>
+  //   g
+  //     .append('text')
+  //     .attr('x', margin.right + 10)
+  //     .attr('y', margin.bottom - 4)
+  //     .attr('fill', 'currentColor')
+  //     .attr('text-anchor', 'end')
+  //     .text('← Fecha')
+  // );
+  const yAxis = (g) => g.attr('transform', `translate(${width - margin.right},0)`).call(axisRight(y));
+  // .call((g) => g.select('.domain').remove())
+  // .call((g) =>
+  //   g
+  //     .append('text')
+  //     .attr('x', margin.right)
+  //     .attr('y', 10)
+  //     .attr('fill', 'currentColor')
+  //     .attr('text-anchor', 'end')
+  //     .text('Cantidad ↑')
+  // );
+
+  const clip = svg
+    .append('defs')
+    .append('svg:clipPath')
+    .attr('id', 'clip')
+    .append('svg:rect')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('x', 0)
+    .attr('y', 0);
+
+  const ejeX = svg.append('g').call(xAxis);
+  svg.append('g').call(yAxis);
+
+  const brush = brushX() // Add the brush feature using the d3.brush function
+    .extent([
+      [0, 0],
+      [width - margin.left, height - margin.bottom],
+    ]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+    .on('end', update2);
+  const dia = 2;
+  console.log(datos.filter((d) => d[2] === dia));
+
+  semana
+    .selectAll('rect')
+    .data(datos)
+    .enter()
+    .append('rect')
+    .attr('opacity', '.1')
+    .attr('x', (d) => x(d[0]))
+    .attr('y', (d) => y(d[1]))
+    .attr('width', anchoBarra)
+    .attr('height', (d) => y(0) - y(d[1]));
+
+  svg.append('g').attr('class', 'brush').call(brush);
+
+  function update2(evento) {
+    const { selection } = evento;
+
+    console.log(evento, evento.selection, width, selection[1] - selection[0]);
+    if (!selection) {
+      x.domain([fechaInicial.toDate(), fechaFinal.toDate()]);
+    } else {
+      x.domain([x.invert(selection[0]), x.invert(selection[1])]);
+      brush.clear(svg);
+    }
+    const ancho = !selection ? anchoBarra : (width - margin.left - margin.right - 30) / (selection[1] - selection[0]);
+    ejeX.transition().duration(1000).call(axisBottom(x));
+
+    semana
+      .selectAll('rect')
+      .attr('x', (d) => x(d[0]))
+      .attr('y', (d) => y(d[1]))
+      .attr('width', ancho / 30);
+    // .attr('height', (d) => y(0) - y(d[1]));
   }
 
-  function actualizarEjeY(duracion = 500) {
-    ejeY.domain([0, max(datos.map((obj) => obj[2]))]).range([dims.alto - dims.margenHor, 0]);
-    indicadorY.transition().duration(duracion).call(axisRight(ejeY));
+  const update = (dia: number) => {
+    console.log('hey');
+    const t = svg.transition().ease(easeLinear).duration(delay);
+    const grupillo = datos.filter((d) => d[2] === dia);
+
+    semana.selectAll('rect').data(grupillo).transition(t).attr('opacity', '1');
+
+    // semana
+    //   .selectAll('rect')
+    //   .data(grupillo)
+    //   .join(
+    //     (enter) =>
+    //       enter
+    //         .append('rect')
+    //         .attr('fill', (d) => color(d[1]))
+    //         .attr('x', (d) => x(d[0]))
+    //         // .attr('y', (d) => y(d[1]))
+    //         .attr('y', () => y(0))
+    //         .attr('width', anchoBarra)
+    //         // .attr('height', (d) => y(0) - y(d[1]))
+    //         .attr('height', 0.1),
+    //     // .attr('height', (d) => y(0) - y(d[1])),
+    //     (update) => update,
+    //     (exit) => exit.remove()
+    //   )
+    //   .transition(t)
+    //   .attr('y', (d) => y(d[1]))
+    //   .attr('height', (d) => y(0) - y(d[1]));
+    // console.log(grupoDia);
+    // grupoDia
+    //   .transition(t)
+    //   .attr('y', (d) => y(d[1]))
+    //   .attr('height', (d) => y(0) - y(d[1]));
+  };
+
+  if (rangoSemanas && valorSemana) {
+    rangoSemanas.max = dias;
+    // update(+rangoSemanas.value);
+    let dia = 1;
+
+    // setInterval(() => {
+    //   dia++;
+    //   update(dia);
+    //   rangoSemanas.value = dia;
+    //   valorSemana.innerText = dia;
+    // }, delay);
+    rangoSemanas.oninput = () => {
+      update(+rangoSemanas.value);
+      valorSemana.innerText = rangoSemanas.value;
+    };
   }
-
-  function actualisDimensiones() {
-    dims.ancho = window.innerWidth;
-    dims.alto = window.innerHeight;
-    indicadorX.attr('transform', `translate(${dims.margenHor}, ${dims.margenVer})`);
-    indicadorY.attr('transform', `translate(${dims.margenHor / 2}, ${dims.margenVer})`);
-  }
-
-  linea.datum(
-    datos.map((d) => {
-      d[0] = new Date(d[0]);
-      return d;
-    })
-  );
-  attrLinea(linea);
-
-  console.log(datos, fechaInicial, fechaFinal, totalMs, fechaFinal.hour());
 </script>
 
 <style>
@@ -117,9 +313,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
     color: #e2e2e2;
   }
 
-  .lineaPrincipal {
-    stroke: red;
-    /* fill: rgba(255, 255, 255, 0.7);
-    clip-path: url(#clip); */
+  #contenedor {
+    margin-bottom: 30px;
   }
 </style>
