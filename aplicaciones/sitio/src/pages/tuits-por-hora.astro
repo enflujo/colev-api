@@ -8,8 +8,12 @@ import Plantilla from '../plantillas/Plantilla.astro';
   imagen="https://colev.enflujo.com/imgs/colev-enflujo_og.webp"
 >
   <main>
-    <svg id="contenedor"></svg>
-    <input id="rangoSemanas" type="range" min="1" name="semanas" value="1" step="1" />
+    <div id="contenedor">
+      <div id="grafica"></div>
+    </div>
+
+    <!-- <svg id="contenedor"></svg> -->
+    <input id="rangoSemanas" type="range" min="1" max="100" name="semanas" value="1" step="1" />
     <label for="semanas">Semana</label>
     <span id="valorSemana">1</span>
   </main>
@@ -19,35 +23,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import dayjs from 'dayjs';
   import utc from 'dayjs/plugin/utc';
   import zonaHoraria from 'dayjs/plugin/timezone';
-  import {
-    ascending,
-    axisBottom,
-    axisRight,
-    BrushBehavior,
-    brushX,
-    create,
-    easeLinear,
-    extent,
-    group,
-    interpolate,
-    interpolatePiYG,
-    line,
-    max,
-    min,
-    scaleBand,
-    scaleLinear,
-    scaleOrdinal,
-    scaleSequential,
-    scaleTime,
-    schemeAccent,
-    select,
-    ticks,
-    timeDays,
-    timeWeek,
-  } from 'd3';
-
-  import type { ValueFn } from 'd3';
-
+  import { convertirEscala } from '@enflujo/alquimia';
   import type { TuitsPorHora } from '../tipos';
 
   dayjs.extend(utc);
@@ -56,7 +32,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
   const zona = 'America/Bogota';
   const servidorUrl = 'http://localhost:8080/tally';
-
+  let maximoY = 0;
   const datos: TuitsPorHora[] = await fetch(`${servidorUrl}/tuits-por-hora`)
     .then((respuesta) => respuesta.json())
     .then((datos) => {
@@ -65,173 +41,262 @@ import Plantilla from '../plantillas/Plantilla.astro';
         const fecha = new Date(d[0]);
         fecha.setHours(d[1]);
         dia = d[1] === 0 ? dia + 1 : dia;
+
+        if (d[2] > maximoY) maximoY = d[2];
         return [fecha, d[2], dia];
       });
     });
+  // .then((datos) => {
+  //   return datos.filter((d) => d[2] < 10);
+  // });
+
+  console.log(datos);
 
   const fechaInicial = dayjs.tz(datos[0][0], zona);
   const fechaFinal = dayjs.tz(datos[datos.length - 1][0], zona);
   const dias = fechaFinal.diff(fechaInicial, 'day');
-  const margen = { arriba: 20, der: 30, abajo: 34, izq: 30 };
-  const dims = { ancho: 0, alto: 0 };
-  const dimsGrafica = { ancho: 0, alto: 0 };
-  const duracion = 250;
-  const rangoSemanas = document.getElementById('rangoSemanas');
-  const valorSemana = document.getElementById('valorSemana');
-  const maximo = max(datos, (d) => d[1]) as number;
+  const horas = fechaFinal.diff(fechaInicial, 'hours');
+  const paso = 1.5;
+  let ancho = horas * paso;
+  const grafica = document.getElementById('grafica') as HTMLDivElement;
+  const semanas = document.getElementById('rangoSemanas');
 
-  const svg = select('#contenedor');
-  const indicadorX = svg.append('g').attr('class', 'eje').attr('id', 'ejeX');
-  const indicadorY = svg.append('g').attr('class', 'eje').attr('id', 'ejeY');
-  const color = scaleOrdinal().domain(['general', 'mencion', 'directo']).range(['#3effd0', '#ffd972', '#89d1f8']);
-  const ejeX = scaleTime();
-  const ejeY = scaleLinear();
-  const grafica = svg.append('g').attr('id', 'grafica');
-  const seleccionadorRango = brushX().on('end', actualizarDatos);
-  const areaSeleccion = svg.append('g').attr('id', 'areaSeleccion');
+  semanas.oninput = () => {
+    const total = horas * paso;
+    const paso2 = semanas.value / 200 + 1;
+    ancho = horas * paso2;
+    console.log(paso2);
+    // console.log(semanas.value);
+    // if (semanas.value < 50) {
+    //   ancho = grafica.clientWidth;
+    // } else {
+    //   ancho = horas * paso;
+    // }
+    actualizarDatos();
+  };
+  // grafica.style.width = `${horas * paso}px`;
 
-  let seleccion = datos;
-  actualizarEjeX();
-  actualizarEjeY();
+  const escalaY = (min: number, max: number) => {
+    const altoContenedor = grafica.clientHeight;
+    return (valor: number) => convertirEscala(valor, min, max, 0, altoContenedor);
+  };
 
-  actualizarDimensiones();
-  areaSeleccion.call(seleccionadorRango);
-  let idleTimeout: NodeJS.Timeout | null = null;
+  const escalaX = (min: Date, max: Date) => {
+    const a = min.valueOf();
+    const b = max.valueOf();
+    return (valor: Date) => convertirEscala(valor.valueOf(), a, b, 0, ancho);
+  };
 
-  function idled() {
-    idleTimeout = null;
+  const y = escalaY(0, maximoY);
+  const x = escalaX(fechaInicial.toDate(), fechaFinal.toDate());
+
+  function actualizarDatos() {
+    datos.forEach((d, i) => {
+      const posY = y(d[1]);
+
+      const barra = document.getElementById(`b-${i}`);
+      barra.querySelector('.linea').style.height = `${posY}px`;
+      // punto.style.bottom = `${posY}px`;
+      barra.style.left = `${x(d[0])}px`;
+    });
   }
+  datos.forEach((_, i) => {
+    const barra = document.createElement('span');
+    const linea = document.createElement('span');
+    const punto = document.createElement('span');
+    punto.className = 'punto';
+    linea.className = 'linea';
+    barra.className = `barra`;
+    barra.id = `b-${i}`;
 
-  function actualizarDatos(evento: any) {
-    console.log(evento);
-    const { selection } = evento;
+    barra.appendChild(linea);
+    barra.appendChild(punto);
+    grafica.appendChild(barra);
+  });
 
-    if (selection) {
-      const inicio = ejeX.invert(selection[0]);
-      const fin = ejeX.invert(selection[1]);
-      seleccion = datos.filter((d) => d[0] >= inicio && d[0] < fin);
+  actualizarDatos();
+  console.log('construida');
 
-      if (!seleccion.length) return;
-      actualizarEjeX(seleccion[0][0], seleccion[seleccion.length - 1][0]);
-      actualizarEjeY(max(seleccion, (d) => d[1]) as number);
-      indicadorX.transition().duration(duracion).call(axisBottom(ejeX));
-      indicadorY.transition().duration(duracion).call(axisRight(ejeY));
+  // const margen = { arriba: 20, der: 30, abajo: 50, izq: 30 };
+  // const dims = { ancho: 0, alto: 0, rangoY: margen.abajo };
+  // const dimsGrafica = { ancho: 0, alto: 0 };
+  // const duracion = 250;
+  // const rangoSemanas = document.getElementById('rangoSemanas');
+  // const valorSemana = document.getElementById('valorSemana');
+  // const maximo = max(datos, (d) => d[1]) as number;
 
-      areaSeleccion.call(seleccionadorRango.move, null);
-    } else {
-      if (!idleTimeout) return (idleTimeout = setTimeout(idled, 350));
-      console.log('zoom out');
+  // const svg = select('#contenedor');
+  // const indicadorX = svg.append('g').attr('class', 'eje').attr('id', 'ejeX');
+  // const indicadorY = svg.append('g').attr('class', 'eje').attr('id', 'ejeY');
+  // const color = scaleOrdinal().domain(['general', 'mencion', 'directo']).range(['#3effd0', '#ffd972', '#89d1f8']);
+  // const ejeX = scaleTime();
+  // const ejeY = scaleLinear();
+  // const ejeXSeleccion = scaleTime().domain([fechaInicial.toDate(), fechaFinal.toDate()]);
+  // const grafica = svg.append('g').attr('id', 'grafica');
+  // const seleccionadorRango = brushX().on('end', actualizarDatos);
+  // const areaSeleccion = svg.append('g').attr('id', 'areaSeleccion');
+  // const propiedadesLinea = (total: number) => {
+  //   const respuesta = { ancho: 0.5, opacidad: 0.1 };
+  //   if (total < dimsGrafica.ancho) {
+  //     respuesta.ancho = 2;
+  //     respuesta.opacidad = 0.6;
+  //   }
+  //   return respuesta;
+  // };
 
-      seleccion = datos;
-      actualizarEjeX();
-      actualizarEjeY();
-    }
+  // let idleTimeout: NodeJS.Timeout | null = null;
+  // let seleccion = datos;
+  // actualizarEjeX();
+  // actualizarEjeY();
 
-    actualizarBarras();
-  }
+  // actualizarDimensiones();
+  // areaSeleccion
+  //   .call(seleccionadorRango)
+  //   .call(seleccionadorRango.move, [ejeXSeleccion(fechaInicial.toDate()), ejeXSeleccion(fechaFinal.toDate())]);
 
-  function actualizarBarras() {
-    grafica
-      .selectAll('.barra')
-      .data(seleccion, (d) => d[0])
-      .join(
-        (enter) => {
-          const grupo = enter
-            .append('g')
-            .attr('class', 'barra')
-            .attr('transform', (d) => {
-              const x = ejeX(d[0]);
-              const y = ejeY(d[1]);
-              return `translate(${x},${y})`;
-            });
+  // function idled() {
+  //   idleTimeout = null;
+  // }
 
-          grupo
-            .append('line')
-            .attr('class', 'linea')
-            .attr('x1', '0')
-            .attr('y1', '0')
-            .attr('x2', '0')
-            .attr('y2', (d) => dimsGrafica.alto - ejeY(d[1]))
-            .attr('stroke', color('general') as string)
-            .attr('stroke-width', '0.5')
-            .attr('opacity', '.1');
+  // function actualizarDatos(evento: any) {
+  //   console.log(evento);
+  //   const { selection } = evento;
 
-          grupo
-            .append('circle')
-            .attr('class', 'punto')
-            .attr('cx', '0')
-            .attr('cy', '0')
-            .attr('r', '1')
-            .attr('fill', color('general') as string);
+  //   if (selection) {
+  //     const inicio = ejeXSeleccion.invert(selection[0]);
+  //     const fin = ejeXSeleccion.invert(selection[1]);
+  //     seleccion = datos.filter((d) => d[0] >= inicio && d[0] < fin);
 
-          return grupo;
-        },
-        (update) => {
-          update.attr('transform', (d) => {
-            const x = ejeX(d[0]);
-            const y = ejeY(d[1]);
-            return `translate(${x},${y})`;
-          });
-          update.selectAll('.linea').attr('y2', (d) => dimsGrafica.alto - ejeY(d[1]));
+  //     if (!seleccion.length) return;
+  //     actualizarEjeX(seleccion[0][0], seleccion[seleccion.length - 1][0]);
+  //     actualizarEjeY(max(seleccion, (d) => d[1]) as number);
+  //     indicadorX.transition().duration(duracion).call(axisBottom(ejeX));
+  //     indicadorY.transition().duration(duracion).call(axisRight(ejeY));
 
-          return update;
-        },
-        (exit) => exit.transition().duration(duracion).attr('y', '0').remove()
-      );
-  }
+  //     // areaSeleccion.call(seleccionadorRango.move, null);
+  //   } else {
+  //     if (!idleTimeout) return (idleTimeout = setTimeout(idled, 350));
+  //     console.log('zoom out');
+  //     // areaSeleccion.call(seleccionadorRango.move, [ejeX(datos[0][0]), ejeX(datos[datos.length - 1][0])]);
+  //     seleccion = datos;
+  //     actualizarEjeX();
+  //     actualizarEjeY();
+  //   }
 
-  function actualizarDimensiones() {
-    dims.ancho = window.innerWidth;
-    dims.alto = window.innerHeight - 100;
-    dimsGrafica.ancho = dims.ancho - margen.izq - margen.der;
-    dimsGrafica.alto = dims.alto - margen.abajo - margen.arriba;
-    svg.attr('width', dims.ancho).attr('height', dims.alto);
+  //   actualizarBarras();
+  // }
 
-    grafica
-      .attr('width', dimsGrafica.ancho)
-      .attr('height', dimsGrafica.alto)
-      .attr('transform', `translate(${margen.izq}, ${margen.arriba})`);
+  // function actualizarBarras() {
+  //   grafica
+  //     .selectAll('.barra')
+  //     .data(seleccion, (d) => d[0])
+  //     .join(
+  //       (enter) => {
+  //         const linea = propiedadesLinea(enter.size());
+  //         const grupo = enter
+  //           .append('g')
+  //           .attr('class', 'barra')
+  //           .attr('transform', (d) => {
+  //             const x = ejeX(d[0]);
+  //             const y = ejeY(d[1]);
+  //             return `translate(${x},${y})`;
+  //           });
 
-    ejeX.range([0, dimsGrafica.ancho]);
-    ejeY.range([dimsGrafica.alto, 0]);
+  //         grupo
+  //           .append('line')
+  //           .attr('class', 'linea')
+  //           .attr('x1', '0')
+  //           .attr('y1', '0')
+  //           .attr('x2', '0')
+  //           .attr('y2', (d) => dimsGrafica.alto - ejeY(d[1]))
+  //           .attr('stroke', color('general') as string)
+  //           .attr('stroke-width', linea.ancho)
+  //           .attr('opacity', linea.opacidad);
 
-    indicadorX
-      .attr('transform', `translate(${margen.izq},${dims.alto - margen.abajo})`)
-      .transition()
-      .duration(duracion)
-      .call(axisBottom(ejeX));
+  //         grupo
+  //           .append('circle')
+  //           .attr('class', 'punto')
+  //           .attr('cx', '0')
+  //           .attr('cy', '0')
+  //           .attr('r', '1')
+  //           .attr('fill', color('general') as string);
 
-    indicadorY
-      .attr('transform', `translate(${dims.ancho - margen.der},${margen.arriba})`)
-      .transition()
-      .duration(duracion)
-      .call(axisRight(ejeY));
+  //         return grupo;
+  //       },
+  //       (update) => {
+  //         const linea = propiedadesLinea(update.size());
 
-    areaSeleccion
-      .attr('width', dimsGrafica.ancho)
-      .attr('height', dimsGrafica.alto)
-      .attr('transform', `translate(${margen.izq}, ${margen.arriba})`);
+  //         update.attr('transform', (d) => {
+  //           const x = ejeX(d[0]);
+  //           const y = ejeY(d[1]);
+  //           return `translate(${x},${y})`;
+  //         });
 
-    seleccionadorRango.extent([
-      [0, 0],
-      [dimsGrafica.ancho, dimsGrafica.alto],
-    ]);
+  //         update
+  //           .selectAll('.linea')
+  //           .attr('y2', (d) => dimsGrafica.alto - ejeY(d[1]))
+  //           .attr('stroke-width', linea.ancho)
+  //           .attr('opacity', linea.opacidad);
 
-    actualizarBarras();
-  }
+  //         return update;
+  //       },
+  //       (exit) => exit.transition().duration(duracion).attr('y', '0').remove()
+  //     );
+  // }
 
-  function actualizarEjeX(inicio: Date = fechaInicial.toDate(), fin: Date = fechaFinal.toDate()) {
-    ejeX.domain([inicio, fin]);
-  }
+  // function actualizarDimensiones() {
+  //   dims.ancho = window.innerWidth;
+  //   dims.alto = window.innerHeight - 100;
+  //   dimsGrafica.ancho = dims.ancho - margen.izq - margen.der;
+  //   dimsGrafica.alto = dims.alto - margen.abajo - margen.arriba;
+  //   svg.attr('width', dims.ancho).attr('height', dims.alto);
 
-  function actualizarEjeY(max: number = maximo) {
-    ejeY.domain([0, max]);
-  }
+  //   grafica
+  //     .attr('width', dimsGrafica.ancho)
+  //     .attr('height', dimsGrafica.alto)
+  //     .attr('transform', `translate(${margen.izq}, ${margen.arriba})`);
 
-  window.onresize = actualizarDimensiones;
+  //   ejeX.range([0, dimsGrafica.ancho]);
+  //   ejeXSeleccion.range([0, dimsGrafica.ancho]);
+  //   ejeY.range([dimsGrafica.alto, 0]);
+
+  //   indicadorY
+  //     .attr('transform', `translate(${dims.ancho - margen.der},${margen.arriba})`)
+  //     .transition()
+  //     .duration(duracion)
+  //     .call(axisRight(ejeY));
+
+  //   indicadorX
+  //     .attr('transform', `translate(${margen.izq},${dimsGrafica.alto + margen.arriba})`)
+  //     .transition()
+  //     .duration(duracion)
+  //     .call(axisBottom(ejeX));
+
+  //   areaSeleccion
+  //     .attr('width', dimsGrafica.ancho)
+  //     .attr('height', margen.abajo)
+  //     .attr('transform', `translate(${margen.izq}, ${dimsGrafica.alto + margen.arriba})`);
+
+  //   seleccionadorRango.extent([
+  //     [0, 0],
+  //     [dimsGrafica.ancho, margen.abajo],
+  //   ]);
+
+  //   // actualizarBarras();
+  // }
+
+  // function actualizarEjeX(inicio: Date = fechaInicial.toDate(), fin: Date = fechaFinal.toDate()) {
+  //   ejeX.domain([inicio, fin]);
+  // }
+
+  // function actualizarEjeY(max: number = maximo) {
+  //   ejeY.domain([0, max]);
+  // }
+
+  // window.onresize = actualizarDimensiones;
 </script>
 
-<style lang="scss">
+<style lang="scss" is:global>
   $verde: #3effd0;
   $negro: #22181c;
   $morado: #5300ff;
@@ -268,12 +333,47 @@ import Plantilla from '../plantillas/Plantilla.astro';
   }
 
   #contenedor {
+    width: 90vw;
+    overflow: auto;
     display: block;
-    margin-bottom: 30px;
+    vertical-align: bottom;
+    position: relative;
+    margin: 0 auto;
   }
 
   line {
     stroke: $verde;
     stroke-width: 2;
+  }
+
+  #grafica {
+    height: 80vh;
+    position: relative;
+    // display: flex;
+    // flex-direction: row;
+    // flex-wrap: nowrap;
+    // align-items: flex-end;
+  }
+
+  .barra {
+    position: absolute;
+    bottom: 0;
+    margin-right: '.5';
+  }
+
+  .punto {
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background-color: $verde;
+    position: absolute;
+    transform: translateX(-45%);
+  }
+
+  .linea {
+    border-left: 1px solid $verde;
+    width: 1px;
+    display: block;
+    opacity: 0.5;
   }
 </style>
