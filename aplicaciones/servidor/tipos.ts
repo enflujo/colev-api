@@ -26,10 +26,11 @@ export type LlavesTuitsPorDia = [
 
 export type LlavesTuitsPorHora = [
   /** Fecha */
-  año: Number,
-  mes: Number,
-  dia: Number,
-  hora: Number
+  año: number,
+  mes: number,
+  dia: number,
+  hora: number,
+  tipo: string
 ];
 
 export type LlavesTuitsPorSemana = [
