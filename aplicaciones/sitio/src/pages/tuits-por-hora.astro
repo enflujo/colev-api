@@ -18,30 +18,25 @@ import Plantilla from '../plantillas/Plantilla.astro';
 </Plantilla>
 
 <script>
-  import dayjs, { Dayjs, DayjsTimezone } from 'dayjs';
+  import dayjs, { Dayjs } from 'dayjs';
   import utc from 'dayjs/plugin/utc';
   import zonaHoraria from 'dayjs/plugin/timezone';
   import { convertirEscala } from '@enflujo/alquimia';
   import type { TuitsDatos, TuitsPorHora, TuitsTipos } from '../tipos';
-  import {
-    axisBottom,
-    axisRight,
-    max,
-    scaleLinear,
-    scaleOrdinal,
-    scaleTime,
-    select,
-    zoom,
-    zoomIdentity,
-    ZoomTransform,
-  } from 'd3';
+  import { axisBottom, axisRight, scaleLinear, scaleTime, select, zoom, zoomIdentity, ZoomTransform } from 'd3';
   import type { Selection } from 'd3';
 
-  const fuente = {
+  const servidorUrl = 'http://localhost:8080/tally';
+
+  type FuenteDatos = {
+    [llave: string]: { maximo: number; datos: TuitsPorHora[] };
+  };
+
+  const fuente: FuenteDatos = {
     todos: { maximo: 0, datos: [] },
     tipos: { maximo: 0, datos: [] },
     quoted: { maximo: 0, datos: [] },
-    replied: { maximo: 0, datos: [] },
+    replied_to: { maximo: 0, datos: [] },
     original: { maximo: 0, datos: [] },
     retweeted: { maximo: 0, datos: [] },
   };
@@ -70,7 +65,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   let fechaInicial: Dayjs;
   let fechaFinal: Dayjs;
 
-  cargarDatos();
+  cargarDatosTodos();
 
   function cambiarTipo(elemento: HTMLDivElement, tipoSeleccionado: TuitsTipos) {
     if (tipo === tipoSeleccionado) return;
@@ -85,65 +80,83 @@ import Plantilla from '../plantillas/Plantilla.astro';
     pintar(zoomIdentity);
   }
 
-  filtroTodos.onclick = () => {
+  filtroTodos.onclick = async () => {
+    if (!fuente.todos.datos.length) {
+      await cargarDatosTodos();
+    }
+
     cambiarTipo(filtroTodos, 'todos');
   };
 
-  filtroTipos.onclick = () => {
+  filtroTipos.onclick = async () => {
+    if (!fuente.tipos.datos.length) {
+      await cargarDatosPorTipos();
+    }
     cambiarTipo(filtroTipos, 'tipos');
   };
 
-  function procesarFechas(datos) {
+  function procesar(datos: TuitsDatos[]) {
+    console.log('antes', datos);
     let dia = 0;
     const conTipo = datos[0].length === 4;
 
-    return datos.map((d: [fecha: string, hora: number, cantidad: number]): TuitsPorHora => {
+    return datos.map((d): TuitsPorHora => {
       const fecha = new Date(d[0]);
+      // La hora viene por separado, se lo pegamos a la fecha para darle precisión.
       fecha.setHours(d[1]);
+
+      // Va sumando los días de la pandemia.
       dia = d[1] === 0 ? dia + 1 : dia;
 
       if (!conTipo) {
-        return [fecha, d[2], dia];
+        return { fecha, valor: d[2], dia };
       } else {
         const tipo = d[3] ? d[3] : 'original';
-        return [fecha, d[2], dia, tipo];
+        return { fecha, valor: d[2], dia, tipo };
       }
     });
   }
 
-  async function cargarDatos() {
-    const servidorUrl = 'http://localhost:8080/tally';
-    fuente.todos.datos = await fetch(`${servidorUrl}/tuits-por-hora`)
-      .then((respuesta) => respuesta.json())
-      .then(procesarFechas);
-
-    fuente.todos.maximo = Math.max(...fuente.todos.datos.map((d: TuitsDatos) => d[1]));
-
+  async function cargarDatosPorTipos() {
     const datosTipos = await fetch(`${servidorUrl}/tuits-por-hora-tipo`)
       .then((respuesta) => respuesta.json())
-      .then(procesarFechas);
+      .then(procesar);
+    console.log(datosTipos);
+    const quoted = datosTipos.filter((d) => d.tipo === 'quoted');
+    const replied = datosTipos.filter((d) => d.tipo === 'replied_to');
+    const retweeted = datosTipos.filter((d) => d.tipo === 'retweeted');
+    const original = datosTipos.filter((d) => d.tipo === null);
 
-    const quoted = datosTipos.filter((d) => d[3] === 'quoted');
-    const replied = datosTipos.filter((d) => d[3] === 'replied_to');
-    const retweeted = datosTipos.filter((d) => d[3] === 'retweeted');
-    const original = datosTipos.filter((d) => d[3] === null);
+    if (datosTipos.length) {
+      fuente.tipos.maximo = Math.max(...datosTipos.map((d: TuitsPorHora) => d.valor));
+    }
 
-    fuente.tipos.maximo = Math.max(...datosTipos.map((d: TuitsDatos) => d[1]));
-    fuente.quoted.maximo = max(quoted, (d) => d[1]);
-    fuente.replied.maximo = max(replied, (d) => d[1]);
-    fuente.original.maximo = max(original, (d) => d[1]);
-    fuente.retweeted.maximo = max(retweeted, (d) => d[1]);
+    fuente.quoted.maximo = Math.max(...quoted.map((d: TuitsPorHora) => d.valor));
+    fuente.replied_to.maximo = Math.max(...replied.map((d: TuitsPorHora) => d.valor));
+    fuente.original.maximo = Math.max(...original.map((d: TuitsPorHora) => d.valor));
+    fuente.retweeted.maximo = Math.max(...retweeted.map((d: TuitsPorHora) => d.valor));
 
     fuente.tipos.datos = datosTipos;
     fuente.quoted.datos = quoted;
-    fuente.replied.datos = replied;
+    fuente.replied_to.datos = replied;
     fuente.original.datos = original;
     fuente.retweeted.datos = retweeted;
 
-    fechaInicial = dayjs.tz(fuente.todos.datos[0][0], zona);
-    fechaFinal = dayjs.tz(fuente.todos.datos[fuente.todos.datos.length - 1][0], zona);
-    actualizarEjeX(fechaInicial.toDate(), fechaFinal.toDate());
     console.log(fuente);
+  }
+
+  async function cargarDatosTodos() {
+    const datos = await fetch(`${servidorUrl}/tuits-por-hora`)
+      .then((respuesta) => respuesta.json())
+      .then(procesar);
+    console.log(datos);
+
+    fuente.todos.datos = datos;
+    fuente.todos.maximo = Math.max(...datos.map((d: TuitsPorHora) => d.valor));
+    fechaInicial = dayjs.tz(datos[0].fecha, zona);
+    fechaFinal = dayjs.tz(datos[datos.length - 1].fecha, zona);
+    actualizarEjeX(fechaInicial.toDate(), fechaFinal.toDate());
+
     inicio();
   }
 
@@ -180,15 +193,15 @@ import Plantilla from '../plantillas/Plantilla.astro';
     if (tipo === 'todos') {
       ctx.fillStyle = color('todos', opacidad);
       datos.forEach((punto) => {
-        const xSinTransformacion = ejeX(punto[0]);
+        const xSinTransformacion = ejeX(punto.fecha);
         const [x] = transformacion.apply([xSinTransformacion, 0]);
-        const y = ejeY(punto[1]);
+        const y = ejeY(punto.valor);
 
         ctx.fillRect(x - centroX, y, ancho, dimsGrafica.alto - y);
         if (escala > escalaMax / 4) {
           ctx.save();
           ctx.fillStyle = 'white';
-          ctx.fillText(`${punto[1]}`, x - centroX, y - 5);
+          ctx.fillText(`${punto.valor}`, x - centroX, y - 5);
           ctx.restore();
         }
       });
@@ -199,18 +212,18 @@ import Plantilla from '../plantillas/Plantilla.astro';
         replied_to: ancho * 2,
       };
       datos.forEach((punto) => {
-        const pasoX = pasos[punto[3]];
-        const xSinTransformacion = ejeX(punto[0]);
+        const pasoX = pasos[punto.tipo];
+        const xSinTransformacion = ejeX(punto.fecha);
         const [x] = transformacion.apply([xSinTransformacion, 0]);
-        const y = ejeY(punto[1]);
-        ctx.fillStyle = color(punto[3], opacidad);
+        const y = ejeY(punto.valor);
+        ctx.fillStyle = color(punto.tipo, opacidad);
         // console.log(x, y);
         ctx.fillRect(x + pasoX, y, ancho, dimsGrafica.alto - y);
 
         if (escala > escalaMax / 4) {
           // ctx.save();
           // ctx.fillStyle = 'white';
-          ctx.fillText(`${punto[1]}`, x + pasoX, y - 5);
+          ctx.fillText(`${punto.valor}`, x + pasoX, y - 5);
           // ctx.restore();
         }
       });
