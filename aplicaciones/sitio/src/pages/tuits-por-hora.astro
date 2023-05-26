@@ -22,7 +22,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import utc from 'dayjs/plugin/utc';
   import zonaHoraria from 'dayjs/plugin/timezone';
   import { convertirEscala } from '@enflujo/alquimia';
-  import type { TuitsPorHora } from '../tipos';
+  import type { TuitsDatos, TuitsPorHora, TuitsTipos } from '../tipos';
   import {
     axisBottom,
     axisRight,
@@ -63,8 +63,8 @@ import Plantilla from '../plantillas/Plantilla.astro';
   const ejeY = scaleLinear();
   const lupa = zoom<HTMLCanvasElement, unknown>().scaleExtent([1, escalaMax]).on('zoom', escalar);
 
-  const filtroTodos = document.getElementById('todos');
-  const filtroTipos = document.getElementById('tipos');
+  const filtroTodos = document.getElementById('todos') as HTMLDivElement;
+  const filtroTipos = document.getElementById('tipos') as HTMLDivElement;
   const filtros = document.getElementById('filtros');
   let tipo = 'todos';
   let fechaInicial: Dayjs;
@@ -72,7 +72,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
   cargarDatos();
 
-  function cambiarTipo(elemento: HTMLDivElement, tipoSeleccionado: string) {
+  function cambiarTipo(elemento: HTMLDivElement, tipoSeleccionado: TuitsTipos) {
     if (tipo === tipoSeleccionado) return;
     filtros?.querySelector('.seleccionado')?.classList.remove('seleccionado');
     elemento.classList.add('seleccionado');
@@ -116,21 +116,23 @@ import Plantilla from '../plantillas/Plantilla.astro';
     fuente.todos.datos = await fetch(`${servidorUrl}/tuits-por-hora`)
       .then((respuesta) => respuesta.json())
       .then(procesarFechas);
-    fuente.todos.maximo = max(fuente.todos.datos, (d) => d[1]) as number;
+
+    fuente.todos.maximo = Math.max(...fuente.todos.datos.map((d: TuitsDatos) => d[1]));
 
     const datosTipos = await fetch(`${servidorUrl}/tuits-por-hora-tipo`)
       .then((respuesta) => respuesta.json())
       .then(procesarFechas);
+
     const quoted = datosTipos.filter((d) => d[3] === 'quoted');
     const replied = datosTipos.filter((d) => d[3] === 'replied_to');
     const retweeted = datosTipos.filter((d) => d[3] === 'retweeted');
     const original = datosTipos.filter((d) => d[3] === null);
 
-    fuente.tipos.maximo = max(datosTipos, (d) => d[1]) as number;
-    fuente.quoted.maximo = max(quoted, (d) => d[1]) as number;
-    fuente.replied.maximo = max(replied, (d) => d[1]) as number;
-    fuente.original.maximo = max(original, (d) => d[1]) as number;
-    fuente.retweeted.maximo = max(retweeted, (d) => d[1]) as number;
+    fuente.tipos.maximo = Math.max(...datosTipos.map((d: TuitsDatos) => d[1]));
+    fuente.quoted.maximo = max(quoted, (d) => d[1]);
+    fuente.replied.maximo = max(replied, (d) => d[1]);
+    fuente.original.maximo = max(original, (d) => d[1]);
+    fuente.retweeted.maximo = max(retweeted, (d) => d[1]);
 
     fuente.tipos.datos = datosTipos;
     fuente.quoted.datos = quoted;

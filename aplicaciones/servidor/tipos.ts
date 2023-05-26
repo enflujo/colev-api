@@ -3,9 +3,9 @@
  */
 
 interface LlavesFechaBase {
-  año: Number;
-  mes: Number;
-  dia: Number;
+  año: number;
+  mes: number;
+  dia: number;
 }
 
 export type LlavesCasosPorDia = [
@@ -19,9 +19,9 @@ export type LlavesCasosPorDia = [
 
 export type LlavesTuitsPorDia = [
   /** Fecha */
-  fecha: String,
+  fecha: string,
   /** Total de tuits */
-  total: Number
+  total: number
 ];
 
 export type LlavesTuitsPorHora = [
@@ -35,46 +35,46 @@ export type LlavesTuitsPorHora = [
 
 export type LlavesTuitsPorSemana = [
   /** Fecha */
-  año: Number,
-  mes: Number,
-  semana: Number
+  año: number,
+  mes: number,
+  semana: number
 ];
 
 export type CasosPorDia = [
   /** Fecha de notificación */
   fecha: Date,
   /** Total muertos */
-  muertos: Number,
+  muertos: number,
   /** Total de casos */
-  total: Number
+  total: number
 ];
 
 export type RespuestaCasosPorDia = {
   _id: Date;
-  muertos: Number;
-  total: Number;
+  muertos: number;
+  total: number;
 };
 
 export type RespuestaTuitsPorDia = {
   _id: LlavesTuitsPorDia;
   fecha: Date;
-  total: Number;
+  total: number;
 };
 
 export type RespuestaTuitsPorHora = {
   _id: LlavesTuitsPorHora;
-  hora: Number;
+  hora: number;
   fecha: Date;
-  total: Number;
+  total: number;
 };
 
 export type RespuestaTuitsPorSemana = {
   _id: LlavesTuitsPorSemana;
-  semana: Number;
+  semana: number;
   fecha: Date;
-  total: Number;
+  total: number;
 };
 
-export type TuitsPorDia = [dia: String, total: Number];
-export type TuitsPorHora = [dia: String, hora: Number, total: Number];
-export type TuitsPorSemana = [dia: String, semana: Number, total: Number];
+export type TuitsPorDia = [dia: string, total: number];
+export type TuitsPorHora = [dia: string, hora: number, total: number];
+export type TuitsPorSemana = [dia: string, semana: number, total: number];

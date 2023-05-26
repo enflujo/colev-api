@@ -25,8 +25,8 @@
     "reiniciar": "pm2 restart ecosystem.config.js"
   },
   "devDependencies": {
-    "concurrently": "^7.6.0",
-    "prettier": "^2.8.4"
+    "concurrently": "^8.0.1",
+    "prettier": "^2.8.8"
   },
   "nodemonConfig": {
     "ignore": [
