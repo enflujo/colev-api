@@ -78,3 +78,5 @@ export type RespuestaTuitsPorSemana = {
 export type TuitsPorDia = [dia: string, total: number];
 export type TuitsPorHora = [dia: string, hora: number, total: number];
 export type TuitsPorSemana = [dia: string, semana: number, total: number];
+export type DatoTuitTipos = [fecha: string, dia: number, total: number, tuits: TiposTuits];
+export type TiposTuits = { [llave: string]: number };

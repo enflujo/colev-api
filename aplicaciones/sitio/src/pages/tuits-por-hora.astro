@@ -22,15 +22,12 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import utc from 'dayjs/plugin/utc';
   import zonaHoraria from 'dayjs/plugin/timezone';
   import { convertirEscala } from '@enflujo/alquimia';
-  import type { TuitsDatos, TuitsPorHora, TuitsTipos } from '../tipos';
-  import { axisBottom, axisRight, scaleLinear, scaleTime, select, zoom, zoomIdentity, ZoomTransform } from 'd3';
-  import type { Selection } from 'd3';
+  import { axisBottom, axisRight, scaleLinear, scaleTime, select, zoom, zoomIdentity } from 'd3';
+  import type { Selection, D3ZoomEvent, ZoomTransform } from 'd3';
+  import type { TuitsDatos, TuitsPorHora, TuitsTipos, FuenteDatos } from '../tipos';
+  import { procesarDatos } from '../utilidades/lineaTuits/procesarDatos';
 
   const servidorUrl = 'http://localhost:8080/tally';
-
-  type FuenteDatos = {
-    [llave: string]: { maximo: number; datos: TuitsPorHora[] };
-  };
 
   const fuente: FuenteDatos = {
     todos: { maximo: 0, datos: [] },
@@ -56,7 +53,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   const indicadorY = svg.append('g').attr('class', 'eje').attr('id', 'ejeY');
   const ejeX = scaleTime();
   const ejeY = scaleLinear();
-  const lupa = zoom<HTMLCanvasElement, unknown>().scaleExtent([1, escalaMax]).on('zoom', escalar);
+  const lupa = zoom<HTMLCanvasElement, unknown>().scaleExtent([1, 1000]).on('zoom', escalar);
 
   const filtroTodos = document.getElementById('todos') as HTMLDivElement;
   const filtroTipos = document.getElementById('tipos') as HTMLDivElement;
@@ -95,61 +92,22 @@ import Plantilla from '../plantillas/Plantilla.astro';
     cambiarTipo(filtroTipos, 'tipos');
   };
 
-  function procesar(datos: TuitsDatos[]) {
-    console.log('antes', datos);
-    let dia = 0;
-    const conTipo = datos[0].length === 4;
-
-    return datos.map((d): TuitsPorHora => {
-      const fecha = new Date(d[0]);
-      // La hora viene por separado, se lo pegamos a la fecha para darle precisión.
-      fecha.setHours(d[1]);
-
-      // Va sumando los días de la pandemia.
-      dia = d[1] === 0 ? dia + 1 : dia;
-
-      if (!conTipo) {
-        return { fecha, valor: d[2], dia };
-      } else {
-        const tipo = d[3] ? d[3] : 'original';
-        return { fecha, valor: d[2], dia, tipo };
-      }
-    });
-  }
-
   async function cargarDatosPorTipos() {
     const datosTipos = await fetch(`${servidorUrl}/tuits-por-hora-tipo`)
       .then((respuesta) => respuesta.json())
-      .then(procesar);
-    console.log(datosTipos);
-    const quoted = datosTipos.filter((d) => d.tipo === 'quoted');
-    const replied = datosTipos.filter((d) => d.tipo === 'replied_to');
-    const retweeted = datosTipos.filter((d) => d.tipo === 'retweeted');
-    const original = datosTipos.filter((d) => d.tipo === null);
+      .then(procesarDatos);
 
     if (datosTipos.length) {
       fuente.tipos.maximo = Math.max(...datosTipos.map((d: TuitsPorHora) => d.valor));
     }
 
-    fuente.quoted.maximo = Math.max(...quoted.map((d: TuitsPorHora) => d.valor));
-    fuente.replied_to.maximo = Math.max(...replied.map((d: TuitsPorHora) => d.valor));
-    fuente.original.maximo = Math.max(...original.map((d: TuitsPorHora) => d.valor));
-    fuente.retweeted.maximo = Math.max(...retweeted.map((d: TuitsPorHora) => d.valor));
-
     fuente.tipos.datos = datosTipos;
-    fuente.quoted.datos = quoted;
-    fuente.replied_to.datos = replied;
-    fuente.original.datos = original;
-    fuente.retweeted.datos = retweeted;
-
-    console.log(fuente);
   }
 
   async function cargarDatosTodos() {
     const datos = await fetch(`${servidorUrl}/tuits-por-hora`)
       .then((respuesta) => respuesta.json())
-      .then(procesar);
-    console.log(datos);
+      .then(procesarDatos);
 
     fuente.todos.datos = datos;
     fuente.todos.maximo = Math.max(...datos.map((d: TuitsPorHora) => d.valor));
@@ -183,8 +141,9 @@ import Plantilla from '../plantillas/Plantilla.astro';
   function pintar(transformacion: ZoomTransform) {
     ctx.clearRect(0, 0, dims.ancho, dims.alto);
     const escala = transformacion.k;
-    const anchoMax = tipo === 'todos' ? 2 : 1;
-    const ancho = convertirEscala(escala, 1, 100, 0.5, anchoMax);
+
+    const anchoMax = 20;
+    const ancho = convertirEscala(escala, 1, escalaMax, 0.5, anchoMax);
     const opacidad = convertirEscala(escala, 1, 60, 0.3, 0.8);
     const centroX = ancho * 0.5;
 
@@ -198,6 +157,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
         const y = ejeY(punto.valor);
 
         ctx.fillRect(x - centroX, y, ancho, dimsGrafica.alto - y);
+
         if (escala > escalaMax / 4) {
           ctx.save();
           ctx.fillStyle = 'white';
@@ -206,37 +166,77 @@ import Plantilla from '../plantillas/Plantilla.astro';
         }
       });
     } else {
-      const pasos = {
-        original: 0,
-        quoted: ancho * 1,
-        replied_to: ancho * 2,
-      };
       datos.forEach((punto) => {
-        const pasoX = pasos[punto.tipo];
-        const xSinTransformacion = ejeX(punto.fecha);
-        const [x] = transformacion.apply([xSinTransformacion, 0]);
-        const y = ejeY(punto.valor);
-        ctx.fillStyle = color(punto.tipo, opacidad);
-        // console.log(x, y);
-        ctx.fillRect(x + pasoX, y, ancho, dimsGrafica.alto - y);
+        if (punto.tipo) {
+          const xSinTransformacion = ejeX(punto.fecha);
+          const [x] = transformacion.apply([xSinTransformacion, 0]);
+          let baseValor = 0;
+          let piso = dimsGrafica.alto;
+          let _y = dimsGrafica.alto;
 
-        if (escala > escalaMax / 4) {
-          // ctx.save();
-          // ctx.fillStyle = 'white';
-          ctx.fillText(`${punto.valor}`, x + pasoX, y - 5);
-          // ctx.restore();
+          if (punto.tipo.original) {
+            const y = ejeY(punto.tipo.original);
+
+            ctx.fillStyle = color('original', opacidad);
+            ctx.fillRect(x - centroX, y, ancho, _y - y);
+            baseValor = punto.tipo.original;
+            _y = y;
+
+            if (escala > escalaMax / 4) {
+              ctx.fillText(`${punto.tipo.original}`, x - 30, y - 5);
+            }
+          }
+
+          if (punto.tipo.quoted) {
+            const y = ejeY(punto.tipo.quoted + baseValor);
+
+            ctx.fillStyle = color('quoted', opacidad);
+            ctx.fillRect(x - centroX, y, ancho, _y - y);
+            baseValor = punto.tipo.quoted + baseValor;
+            _y = y;
+
+            if (escala > escalaMax / 4) {
+              ctx.fillText(`${punto.tipo.quoted}`, x - 30, y - 5);
+            }
+          }
+
+          if (punto.tipo.replied_to) {
+            const y = ejeY(punto.tipo.replied_to + baseValor);
+
+            ctx.fillStyle = color('replied_to', opacidad);
+            ctx.fillRect(x - centroX, y, ancho, _y - y);
+            baseValor = punto.tipo.replied_to + baseValor;
+            _y = y;
+
+            if (escala > escalaMax / 4) {
+              ctx.fillText(`${punto.tipo.replied_to}`, x - 30, y - 5);
+            }
+          }
+
+          if (punto.tipo.retweeted) {
+            const y = ejeY(punto.tipo.retweeted + baseValor);
+
+            ctx.fillStyle = color('retweeted', opacidad);
+            ctx.fillRect(x - centroX, y, ancho, _y - y);
+            baseValor = punto.tipo.retweeted + baseValor;
+            _y = y;
+
+            if (escala > escalaMax / 4) {
+              ctx.fillText(`${punto.tipo.retweeted}`, x - 30, y - 5);
+            }
+          }
         }
       });
     }
   }
 
-  function escalar(evento) {
+  function escalar({ transform }: D3ZoomEvent<SVGElement, TuitsDatos>) {
     indicadorX
       .transition()
       .duration(duracion)
-      .call(axisBottom(evento.transform.rescaleX(ejeX)));
+      .call(axisBottom(transform.rescaleX(ejeX)).ticks(24));
 
-    pintar(evento.transform);
+    pintar(transform);
   }
 
   function actualizarDimensiones() {

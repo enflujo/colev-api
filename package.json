@@ -12,7 +12,7 @@
     "dev": "concurrently --kill-others-on-fail --raw \"yarn dev:ts\" \"yarn dev:api\" \"yarn dev:www\"",
     "dev:ts": "yarn workspace servidor dev",
     "dev:api": "nodemon api/index.js",
-    "dev:www": "yarn workspace sitio dev --host",
+    "dev:www": "yarn workspace sitio dev",
     "build": "yarn build:api && yarn build:www",
     "build:api": "yarn workspace servidor build",
     "build:www": "yarn workspace sitio build",
@@ -25,7 +25,7 @@
     "reiniciar": "pm2 restart ecosystem.config.js"
   },
   "devDependencies": {
-    "concurrently": "^8.0.1",
+    "concurrently": "^8.1.0",
     "prettier": "^2.8.8"
   },
   "nodemonConfig": {
