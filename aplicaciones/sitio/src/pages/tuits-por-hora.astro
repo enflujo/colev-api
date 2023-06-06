@@ -8,6 +8,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   imagen="https://colev.enflujo.com/imgs/colev-enflujo_og.webp"
 >
   <main>
+    <div id="sombra"></div>
     <svg id="contenedor"></svg>
     <canvas id="lienzo"></canvas>
     <div id="filtros">
@@ -29,16 +30,24 @@ import Plantilla from '../plantillas/Plantilla.astro';
         max="2018-06-14T00:00"
       />
     </div>
+
+    <div id="info">
+      <p class="fecha"></p>
+      <p class="total campo"><span class="titulo">Total:</span><span class="valor"></span></p>
+      <p class="originales campo"><span class="titulo">Originales:</span><span class="valor"></span></p>
+      <p class="citas campo"><span class="titulo">Citados (quoted):</span><span class="valor"></span></p>
+      <p class="replicas campo"><span class="titulo">Respuestas (replied_to):</span><span class="valor"></span></p>
+    </div>
   </main>
 </Plantilla>
 
 <script>
   import { convertirEscala } from '@enflujo/alquimia';
-  import { axisBottom, axisRight, select, zoom, zoomIdentity } from 'd3';
+  import { ZoomBehavior, axisBottom, axisRight, pointer, select, zoom, zoomIdentity } from 'd3';
   import type { Selection, D3ZoomEvent, ZoomTransform } from 'd3';
   import type { TuitsDatos, TuitsPorHora, TuitsTipos } from '@/tipos';
-  import { cargarDatos } from '@/utilidades/lineaTuits/cargarDatos';
-  import { color, duracion } from '@/utilidades/lineaTuits/constantes';
+  import { cargarDatos } from '@/modulos/lineaTuits/cargarDatos';
+  import { color, duracion, margen } from '@/modulos/lineaTuits/constantes';
   import {
     actualizarEjeX,
     actualizarEjeY,
@@ -46,14 +55,18 @@ import Plantilla from '../plantillas/Plantilla.astro';
     ejeY,
     indicadores,
     iniciarIndicadores,
-  } from '@/utilidades/lineaTuits/indicadores';
+  } from '@/modulos/lineaTuits/indicadores';
+  import { escalarEjeX } from '@/modulos/lineaTuits/indicadores';
+  import { actualizarInfo, esconderInfo, mostrarInfo } from '@/modulos/lineaTuits/informacion';
+  import { definirValores } from '@/modulos/lineaTuits/camposFechas';
+  import { fechasActuales } from '@/modulos/lineaTuits/cerebro';
+  import { instanciaFechas } from '@/modulos/lineaTuits/fechas';
 
   const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
   const escalaMax = 500;
-  const margen = { arriba: 20, der: 60, abajo: 50, izq: 30 };
+
   const dims = { ancho: 0, alto: 0, rangoY: margen.abajo };
   const dimsGrafica = { ancho: 0, alto: 0 };
-
   const svg = select('#contenedor');
   const lienzo: Selection<HTMLCanvasElement, unknown, HTMLElement, any> = select('#lienzo');
   const ctx = lienzo?.node()?.getContext('2d') as CanvasRenderingContext2D;
@@ -61,10 +74,51 @@ import Plantilla from '../plantillas/Plantilla.astro';
   const filtroTodos = document.getElementById('todos') as HTMLDivElement;
   const filtroTipos = document.getElementById('tipos') as HTMLDivElement;
   const filtros = document.getElementById('filtros');
+  const sombra = document.getElementById('sombra') as HTMLDivElement;
+
   let tipo = 'todos';
-  let transformacionActual: ZoomTransform;
+  let transformacionActual: ZoomTransform = zoomIdentity;
 
   inicio();
+
+  fechasActuales.subscribe((fecha, llave) => {
+    if (llave === 'inicio') {
+      sombra.innerText = fecha.inicio.toLocaleString('es-CO', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+      });
+    }
+    console.log(llave, fecha);
+  });
+
+  lienzo.on('mouseenter', mostrarInfo);
+  lienzo.on('mouseleave', esconderInfo);
+
+  lienzo.on('mousemove', (evento) => {
+    const posicion = pointer(evento);
+    const fecha = ejeX.invert(transformacionActual.invertX(posicion[0]));
+    fecha.setMinutes(0);
+    fecha.setSeconds(0);
+    fecha.setMilliseconds(0);
+    const punto = fuente.datos.find((d) => d.fecha >= fecha);
+
+    if (punto) {
+      actualizarInfo(punto, posicion);
+    }
+  });
+
+  function escalar({ transform }: D3ZoomEvent<SVGElement, TuitsDatos>) {
+    escalarEjeX(transform);
+    pintar(transform);
+    transformacionActual = transform;
+
+    const inicio = ejeX.invert(transform.invertX(0));
+    const fin = ejeX.invert(transform.invertX(dimsGrafica.ancho));
+
+    definirValores(inicio, fin);
+  }
 
   async function inicio() {
     const { datos, maximo, fechaMin, fechaMax } = await cargarDatos();
@@ -104,7 +158,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
     const anchoMax = 20;
     const ancho = convertirEscala(escala, 1, escalaMax, 0.5, anchoMax);
     const opacidad = convertirEscala(escala, 1, 60, 0.3, 0.8);
-    const centroX = ancho * 0.5;
 
     const { datos } = fuente;
 
@@ -116,12 +169,12 @@ import Plantilla from '../plantillas/Plantilla.astro';
         const [x] = transformacion.apply([xSinTransformacion, 0]);
         const y = ejeY(punto.valor);
 
-        ctx.fillRect(x - centroX, y, ancho, dimsGrafica.alto - y);
+        ctx.fillRect(x, y, ancho, dimsGrafica.alto - y);
 
         if (escala > escalaMax / 4) {
           ctx.save();
           ctx.fillStyle = 'white';
-          ctx.fillText(`${punto.valor}`, x - centroX, y - 5);
+          ctx.fillText(`${punto.valor}`, x, y - 5);
           ctx.restore();
         }
       });
@@ -137,48 +190,36 @@ import Plantilla from '../plantillas/Plantilla.astro';
             const y = ejeY(punto.tipo.original);
 
             ctx.fillStyle = color('original', opacidad);
-            ctx.fillRect(x - centroX, y, ancho, _y - y);
+            ctx.fillRect(x, y, ancho, _y - y);
             baseValor = punto.tipo.original;
             _y = y;
-
-            if (escala > escalaMax / 4) {
-              ctx.fillText(`${punto.tipo.original}`, x - 30, y - 5);
-            }
           }
 
           if (punto.tipo.quoted) {
             const y = ejeY(punto.tipo.quoted + baseValor);
 
             ctx.fillStyle = color('quoted', opacidad);
-            ctx.fillRect(x - centroX, y, ancho, _y - y);
+            ctx.fillRect(x, y, ancho, _y - y);
             baseValor = punto.tipo.quoted + baseValor;
             _y = y;
-
-            if (escala > escalaMax / 4) {
-              ctx.fillText(`${punto.tipo.quoted}`, x - 30, y - 5);
-            }
           }
 
           if (punto.tipo.replied_to) {
             const y = ejeY(punto.tipo.replied_to + baseValor);
 
             ctx.fillStyle = color('replied_to', opacidad);
-            ctx.fillRect(x - centroX, y, ancho, _y - y);
+            ctx.fillRect(x, y, ancho, _y - y);
             baseValor = punto.tipo.replied_to + baseValor;
             _y = y;
+          }
 
-            if (escala > escalaMax / 4) {
-              ctx.fillText(`${punto.tipo.replied_to}`, x - 30, y - 5);
-            }
+          if (escala > escalaMax / 4) {
+            ctx.fillStyle = 'white';
+            ctx.fillText(`${punto.valor}`, x, _y - 5);
           }
         }
       });
     }
-  }
-
-  function escalar({ transform }: D3ZoomEvent<SVGElement, TuitsDatos>) {
-    pintar(transform);
-    transformacionActual = transform;
   }
 
   function actualizarDimensiones() {
@@ -280,5 +321,82 @@ import Plantilla from '../plantillas/Plantilla.astro';
         background-color: rgba($verde, 0.3);
       }
     }
+  }
+
+  #info {
+    position: absolute;
+    pointer-events: none;
+    max-width: 320px;
+    font-size: 0.75em;
+    line-height: 1;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 0.3em;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    p {
+      margin: 0;
+    }
+
+    &.visible {
+      opacity: 1;
+    }
+
+    .fecha {
+      font-weight: bold;
+      border-bottom: 1px dotted;
+      margin-bottom: 0.3em;
+      padding-bottom: 0.2em;
+    }
+
+    .valor {
+      font-weight: bold;
+      margin-left: 0.2em;
+    }
+
+    .campo {
+      &::before {
+        content: '';
+        width: 0.8em;
+        height: 0.8em;
+        margin-right: 0.4em;
+        display: inline-block;
+        background-color: rgb(62, 220, 255);
+      }
+    }
+
+    .citas {
+      &::before {
+        background-color: rgb(255, 217, 114);
+      }
+    }
+
+    .replicas {
+      &::before {
+        background-color: rgb(240, 209, 208);
+      }
+    }
+
+    .originales {
+      &::before {
+        background-color: rgb(15, 239, 183);
+      }
+    }
+  }
+
+  input[type='datetime-local'] {
+    outline: none;
+
+    &:active,
+    &:focus {
+      font: bold;
+    }
+  }
+
+  #sombra {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    font-size: 2em;
+    opacity: 0.3;
   }
 </style>

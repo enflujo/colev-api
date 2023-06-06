@@ -1,8 +1,17 @@
+import { fechasActuales } from './cerebro';
+import { instanciaFechas } from './fechas';
+
 const filtroDesde = document.getElementById('filtroDesde') as HTMLInputElement;
 const filtroHasta = document.getElementById('filtroHasta') as HTMLInputElement;
 
+filtroDesde.onchange = (evento) => {
+  const { value } = evento.target as HTMLInputElement;
+
+  fechasActuales.setKey('inicio', new Date(value));
+};
+
 function fechaATexto(fecha: Date) {
-  return fecha.toISOString().slice(0, 16);
+  return instanciaFechas().tz(fecha).format('YYYY-MM-DDTHH:00');
 }
 
 export const definirMinMaxFechas = (min: Date, max: Date) => {
@@ -11,6 +20,11 @@ export const definirMinMaxFechas = (min: Date, max: Date) => {
 
   filtroHasta.setAttribute('min', fechaATexto(min));
   filtroHasta.setAttribute('max', fechaATexto(max));
+};
+
+export const definirValores = (inicio: Date, fin: Date) => {
+  definirValorDesde(inicio);
+  definirValorHasta(fin);
 };
 
 export const definirValorDesde = (fecha: Date) => {
