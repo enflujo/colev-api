@@ -13,6 +13,21 @@ import Plantilla from '../plantillas/Plantilla.astro';
     <div id="filtros">
       <div id="todos" class="filtro seleccionado">Todos</div>
       <div id="tipos" class="filtro">Por tipos</div>
+      <input
+        type="datetime-local"
+        id="filtroDesde"
+        value="2018-06-12T19:30"
+        min="2018-06-07T00:00"
+        max="2018-06-14T00:00"
+      />
+
+      <input
+        type="datetime-local"
+        id="filtroHasta"
+        value="2018-06-12T19:30"
+        min="2018-06-07T00:00"
+        max="2018-06-14T00:00"
+      />
     </div>
   </main>
 </Plantilla>
