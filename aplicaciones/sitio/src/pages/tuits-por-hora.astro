@@ -33,108 +33,47 @@ import Plantilla from '../plantillas/Plantilla.astro';
 </Plantilla>
 
 <script>
-  import dayjs, { Dayjs } from 'dayjs';
-  import utc from 'dayjs/plugin/utc';
-  import zonaHoraria from 'dayjs/plugin/timezone';
   import { convertirEscala } from '@enflujo/alquimia';
-  import { axisBottom, axisRight, scaleLinear, scaleTime, select, zoom, zoomIdentity } from 'd3';
+  import { axisBottom, axisRight, select, zoom, zoomIdentity } from 'd3';
   import type { Selection, D3ZoomEvent, ZoomTransform } from 'd3';
-  import type { TuitsDatos, TuitsPorHora, TuitsTipos, FuenteDatos } from '../tipos';
-  import { procesarDatos } from '../utilidades/lineaTuits/procesarDatos';
+  import type { TuitsDatos, TuitsPorHora, TuitsTipos } from '@/tipos';
+  import { cargarDatos } from '@/utilidades/lineaTuits/cargarDatos';
+  import { color, duracion } from '@/utilidades/lineaTuits/constantes';
+  import {
+    actualizarEjeX,
+    actualizarEjeY,
+    ejeX,
+    ejeY,
+    indicadores,
+    iniciarIndicadores,
+  } from '@/utilidades/lineaTuits/indicadores';
 
-  const servidorUrl = 'http://localhost:8080/tally';
-
-  const fuente: FuenteDatos = {
-    todos: { maximo: 0, datos: [] },
-    tipos: { maximo: 0, datos: [] },
-    quoted: { maximo: 0, datos: [] },
-    replied_to: { maximo: 0, datos: [] },
-    original: { maximo: 0, datos: [] },
-    retweeted: { maximo: 0, datos: [] },
-  };
-  const zona = 'America/Bogota';
-  dayjs.extend(utc);
-  dayjs.extend(zonaHoraria);
-
+  const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
   const escalaMax = 500;
   const margen = { arriba: 20, der: 60, abajo: 50, izq: 30 };
   const dims = { ancho: 0, alto: 0, rangoY: margen.abajo };
   const dimsGrafica = { ancho: 0, alto: 0 };
-  const duracion = 250;
+
   const svg = select('#contenedor');
   const lienzo: Selection<HTMLCanvasElement, unknown, HTMLElement, any> = select('#lienzo');
   const ctx = lienzo?.node()?.getContext('2d') as CanvasRenderingContext2D;
-  const indicadorX = svg.append('g').attr('class', 'eje').attr('id', 'ejeX');
-  const indicadorY = svg.append('g').attr('class', 'eje').attr('id', 'ejeY');
-  const ejeX = scaleTime();
-  const ejeY = scaleLinear();
   const lupa = zoom<HTMLCanvasElement, unknown>().scaleExtent([1, 1000]).on('zoom', escalar);
-
   const filtroTodos = document.getElementById('todos') as HTMLDivElement;
   const filtroTipos = document.getElementById('tipos') as HTMLDivElement;
   const filtros = document.getElementById('filtros');
   let tipo = 'todos';
-  let fechaInicial: Dayjs;
-  let fechaFinal: Dayjs;
+  let transformacionActual: ZoomTransform;
 
-  cargarDatosTodos();
+  inicio();
 
-  function cambiarTipo(elemento: HTMLDivElement, tipoSeleccionado: TuitsTipos) {
-    if (tipo === tipoSeleccionado) return;
-    filtros?.querySelector('.seleccionado')?.classList.remove('seleccionado');
-    elemento.classList.add('seleccionado');
-    tipo = tipoSeleccionado;
+  async function inicio() {
+    const { datos, maximo, fechaMin, fechaMax } = await cargarDatos();
+    fuente.datos = datos;
+    fuente.maximo = maximo;
 
-    const { maximo } = fuente[tipoSeleccionado];
-    actualizarEjeY(maximo);
-    indicadorY.transition().duration(duracion).call(axisRight(ejeY));
+    iniciarIndicadores(svg);
 
-    pintar(zoomIdentity);
-  }
-
-  filtroTodos.onclick = async () => {
-    if (!fuente.todos.datos.length) {
-      await cargarDatosTodos();
-    }
-
-    cambiarTipo(filtroTodos, 'todos');
-  };
-
-  filtroTipos.onclick = async () => {
-    if (!fuente.tipos.datos.length) {
-      await cargarDatosPorTipos();
-    }
-    cambiarTipo(filtroTipos, 'tipos');
-  };
-
-  async function cargarDatosPorTipos() {
-    const datosTipos = await fetch(`${servidorUrl}/tuits-por-hora-tipo`)
-      .then((respuesta) => respuesta.json())
-      .then(procesarDatos);
-
-    if (datosTipos.length) {
-      fuente.tipos.maximo = Math.max(...datosTipos.map((d: TuitsPorHora) => d.valor));
-    }
-
-    fuente.tipos.datos = datosTipos;
-  }
-
-  async function cargarDatosTodos() {
-    const datos = await fetch(`${servidorUrl}/tuits-por-hora`)
-      .then((respuesta) => respuesta.json())
-      .then(procesarDatos);
-
-    fuente.todos.datos = datos;
-    fuente.todos.maximo = Math.max(...datos.map((d: TuitsPorHora) => d.valor));
-    fechaInicial = dayjs.tz(datos[0].fecha, zona);
-    fechaFinal = dayjs.tz(datos[datos.length - 1].fecha, zona);
-    actualizarEjeX(fechaInicial.toDate(), fechaFinal.toDate());
-
-    inicio();
-  }
-
-  function inicio() {
-    const { maximo } = fuente[tipo];
+    actualizarEjeX(fechaMin, fechaMax);
     actualizarEjeY(maximo);
     actualizarDimensiones();
     lienzo.call(lupa);
@@ -142,16 +81,21 @@ import Plantilla from '../plantillas/Plantilla.astro';
     window.onresize = actualizarDimensiones;
   }
 
-  function color(tipo: string, opacidad: number): string {
-    const colores: { [color: string]: string } = {
-      todos: `rgba(62, 255, 207, ${opacidad})`, // verde
-      quoted: `rgba(255, 217, 114, ${opacidad})`, // amarillo
-      replied_to: `rgba(137, 209, 248, ${opacidad})`, // azul
-      original: `rgba(62, 255, 207, ${opacidad})`, // verde
-    };
-
-    return colores[tipo];
+  function cambiarTipo(elemento: HTMLDivElement, tipoSeleccionado: TuitsTipos) {
+    if (tipo === tipoSeleccionado) return;
+    filtros?.querySelector('.seleccionado')?.classList.remove('seleccionado');
+    elemento.classList.add('seleccionado');
+    tipo = tipoSeleccionado;
+    pintar(transformacionActual || zoomIdentity);
   }
+
+  filtroTodos.onclick = async () => {
+    cambiarTipo(filtroTodos, 'todos');
+  };
+
+  filtroTipos.onclick = async () => {
+    cambiarTipo(filtroTipos, 'tipos');
+  };
 
   function pintar(transformacion: ZoomTransform) {
     ctx.clearRect(0, 0, dims.ancho, dims.alto);
@@ -162,10 +106,11 @@ import Plantilla from '../plantillas/Plantilla.astro';
     const opacidad = convertirEscala(escala, 1, 60, 0.3, 0.8);
     const centroX = ancho * 0.5;
 
-    const { datos } = fuente[tipo];
+    const { datos } = fuente;
 
     if (tipo === 'todos') {
       ctx.fillStyle = color('todos', opacidad);
+
       datos.forEach((punto) => {
         const xSinTransformacion = ejeX(punto.fecha);
         const [x] = transformacion.apply([xSinTransformacion, 0]);
@@ -186,7 +131,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
           const xSinTransformacion = ejeX(punto.fecha);
           const [x] = transformacion.apply([xSinTransformacion, 0]);
           let baseValor = 0;
-          let piso = dimsGrafica.alto;
           let _y = dimsGrafica.alto;
 
           if (punto.tipo.original) {
@@ -227,31 +171,14 @@ import Plantilla from '../plantillas/Plantilla.astro';
               ctx.fillText(`${punto.tipo.replied_to}`, x - 30, y - 5);
             }
           }
-
-          if (punto.tipo.retweeted) {
-            const y = ejeY(punto.tipo.retweeted + baseValor);
-
-            ctx.fillStyle = color('retweeted', opacidad);
-            ctx.fillRect(x - centroX, y, ancho, _y - y);
-            baseValor = punto.tipo.retweeted + baseValor;
-            _y = y;
-
-            if (escala > escalaMax / 4) {
-              ctx.fillText(`${punto.tipo.retweeted}`, x - 30, y - 5);
-            }
-          }
         }
       });
     }
   }
 
   function escalar({ transform }: D3ZoomEvent<SVGElement, TuitsDatos>) {
-    indicadorX
-      .transition()
-      .duration(duracion)
-      .call(axisBottom(transform.rescaleX(ejeX)).ticks(24));
-
     pintar(transform);
+    transformacionActual = transform;
   }
 
   function actualizarDimensiones() {
@@ -274,27 +201,19 @@ import Plantilla from '../plantillas/Plantilla.astro';
     ejeX.range([0, dimsGrafica.ancho]);
     ejeY.range([dimsGrafica.alto, 0]);
 
-    indicadorY
-      .attr('transform', `translate(${dims.ancho - margen.der},${margen.arriba})`)
+    indicadores.y
+      ?.attr('transform', `translate(${dims.ancho - margen.der},${margen.arriba})`)
       .transition()
       .duration(duracion)
       .call(axisRight(ejeY));
 
-    indicadorX
-      .attr('transform', `translate(${margen.izq},${dimsGrafica.alto + margen.arriba})`)
+    indicadores.x
+      ?.attr('transform', `translate(${margen.izq},${dimsGrafica.alto + margen.arriba})`)
       .transition()
       .duration(duracion)
       .call(axisBottom(ejeX));
 
-    pintar(zoomIdentity);
-  }
-
-  function actualizarEjeX(inicio: Date, fin: Date) {
-    ejeX.domain([inicio, fin]);
-  }
-
-  function actualizarEjeY(max: number) {
-    ejeY.domain([0, max]);
+    pintar(transformacionActual || zoomIdentity);
   }
 </script>
 
