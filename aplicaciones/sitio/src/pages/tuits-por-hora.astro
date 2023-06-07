@@ -8,93 +8,286 @@ import Plantilla from '../plantillas/Plantilla.astro';
   imagen="https://colev.enflujo.com/imgs/colev-enflujo_og.webp"
 >
   <main>
-    <div id="contenedor"></div>
+    <section class="encabezado">
+      <h1 class="tituloPagina">Twitter en la Pandemia</h1>
+      <div id="resumen">
+        <h3>Resumen</h3>
+        <!-- <p class="texto">En las fechas:</p> -->
+        <p>
+          <span class="desde fecha"></span>
+          <span class="flechaHaciaDerecha"><img src="/imgs/flechaDerecha.svg" alt="Flecha hacia la derecha" /></span>
+          <span class="hasta fecha"></span>
+        </p>
+
+        <div class="datos">
+          <p class="total campo"><span class="titulo">Total:</span><span class="valor"></span></p>
+          <p class="originales campo"><span class="titulo">Originales:</span><span class="valor"></span></p>
+          <p class="citas campo"><span class="titulo">Citados (quoted):</span><span class="valor"></span></p>
+          <p class="replicas campo"><span class="titulo">Respuestas (replied_to):</span><span class="valor"></span></p>
+          <div id="barras">
+            <span class="originales"><span class="valor"></span></span>
+            <span class="citas"><span class="valor"></span></span>
+            <span class="replicas"><span class="valor"></span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <svg id="contenedor"></svg>
+    <canvas id="lienzo"></canvas>
+    <div id="filtros">
+      <div id="todos" class="filtro seleccionado">Todos</div>
+      <div id="tipos" class="filtro">Por tipos</div>
+      <input
+        type="datetime-local"
+        id="filtroDesde"
+        value="2018-06-12T19:30"
+        min="2018-06-07T00:00"
+        max="2018-06-14T00:00"
+      />
+
+      <input
+        type="datetime-local"
+        id="filtroHasta"
+        value="2018-06-12T19:30"
+        min="2018-06-07T00:00"
+        max="2018-06-14T00:00"
+      />
+    </div>
+
+    <div id="info">
+      <p class="fecha"></p>
+      <p class="total campo"><span class="titulo">Total:</span><span class="valor"></span></p>
+      <p class="originales campo"><span class="titulo">Originales:</span><span class="valor"></span></p>
+      <p class="citas campo"><span class="titulo">Citados (quoted):</span><span class="valor"></span></p>
+      <p class="replicas campo"><span class="titulo">Respuestas (replied_to):</span><span class="valor"></span></p>
+    </div>
   </main>
 </Plantilla>
 
 <script>
-  import dayjs from 'dayjs';
-  import utc from 'dayjs/plugin/utc';
-  import zonaHoraria from 'dayjs/plugin/timezone';
+  import { convertirEscala } from '@enflujo/alquimia';
+  import { axisBottom, axisRight, pointer, select, zoom, zoomIdentity } from 'd3';
+  import type { Selection, D3ZoomEvent, ZoomTransform } from 'd3';
+  import type { TuitsDatos, TuitsPorHora, TuitsTipos } from '@/tipos';
+  import { cargarDatos } from '@/modulos/lineaTuits/cargarDatos';
+  import { color, duracion, margen } from '@/modulos/lineaTuits/constantes';
   import {
-    area,
-    axisBottom,
-    axisLeft,
-    axisRight,
-    bisector,
-    line,
-    max,
-    scaleLinear,
-    scaleTime,
-    select,
-    timeWeek,
-  } from 'd3';
+    actualizarEjeX,
+    actualizarEjeY,
+    ejeX,
+    ejeY,
+    indicadores,
+    iniciarIndicadores,
+  } from '@/modulos/lineaTuits/indicadores';
+  import { escalarEjeX } from '@/modulos/lineaTuits/indicadores';
+  import { actualizarInfo, esconderInfo, mostrarInfo } from '@/modulos/lineaTuits/informacion';
+  import { definirValores } from '@/modulos/lineaTuits/camposFechas';
+  import { fechasIgualesAHora } from '@/utilidades/ayudas';
+  import { iniciarResumen } from '@/modulos/lineaTuits/resumen';
 
-  dayjs.extend(utc);
-  dayjs.extend(zonaHoraria);
-  dayjs.tz.setDefault('America/Bogota');
+  const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
+  const escalaMax = 500;
 
-  const zona = 'America/Bogota';
-  const servidorUrl = 'http://localhost:8080/tally';
-  const datos = await fetch(`${servidorUrl}/tuits-por-hora`).then((respuesta) => respuesta.json());
+  const dims = { ancho: 0, alto: 0, rangoY: margen.abajo };
+  const dimsGrafica = { ancho: 0, alto: 0 };
+  const svg = select('#contenedor');
+  const lienzo: Selection<HTMLCanvasElement, unknown, HTMLElement, any> = select('#lienzo');
+  const ctx = lienzo?.node()?.getContext('2d') as CanvasRenderingContext2D;
+  const lupa = zoom<HTMLCanvasElement, unknown>().scaleExtent([1, 1000]).on('zoom', escalar);
+  const filtroTodos = document.getElementById('todos') as HTMLDivElement;
+  const filtroTipos = document.getElementById('tipos') as HTMLDivElement;
+  const filtros = document.getElementById('filtros');
 
-  const fechaInicial = dayjs.tz(datos[0][0], zona);
-  const fechaFinal = dayjs.tz(datos[datos.length - 1][0], zona);
-  const totalMs = fechaFinal.unix() - fechaInicial.unix();
-  const dims = { ancho: 0, alto: 0, margenHor: 100, margenVer: 50 };
+  let tipo = 'todos';
+  let transformacionActual: ZoomTransform = zoomIdentity;
 
-  const contenedor = select('#contenedor');
-  const svg = contenedor.append('svg').attr('id', 'grafica');
-  const indicadorX = svg.append('g').attr('class', 'eje').attr('id', 'ejeX').style('marginLeft', `${dims.margenHor}px`);
-  const indicadorY = svg.append('g').attr('class', 'eje').attr('id', 'ejeY');
-  const linea = svg.append('path').attr('class', 'lineaPrincipal').attr('id', 'lineaPrincipal').attr('stroke', 'black');
-  const ejeX = scaleTime();
-  const ejeY = scaleLinear();
+  inicio();
 
-  const interseccionX = bisector((d) => d[0]).left;
-  const attrLinea = (grupo) => grupo.attr('d', area(posX, posY, dims.alto));
+  lienzo.on('mouseenter', mostrarInfo);
+  lienzo.on('mouseleave', esconderInfo);
 
-  const posX = (d) => ejeX(d[0]);
-  const posY = (d) => ejeY(d[2]);
+  lienzo.on('mousemove', (evento) => {
+    const posicion = pointer(evento);
+    const fecha = ejeX.invert(transformacionActual.invertX(posicion[0]));
 
-  actualisDimensiones();
-  actualizarEjeX();
-  actualizarEjeY();
-  console.log(dims);
-  svg.attr('width', dims.ancho).attr('height', dims.alto);
+    const punto = fuente.datos.find((d) => {
+      return fechasIgualesAHora(d.fecha, fecha);
+    });
 
-  function actualizarEjeX(duracion = 500) {
-    ejeX.domain([fechaInicial, fechaFinal]).range([0, dims.ancho]);
-    indicadorX
+    if (punto) {
+      actualizarInfo(punto, posicion);
+    } else {
+      actualizarInfo({ valor: 0, fecha, dia: 0 }, posicion);
+    }
+  });
+
+  function escalar({ transform }: D3ZoomEvent<SVGElement, TuitsDatos>) {
+    escalarEjeX(transform);
+    pintar(transform);
+    transformacionActual = transform;
+
+    const inicio = ejeX.invert(transform.invertX(0));
+    const fin = ejeX.invert(transform.invertX(dimsGrafica.ancho));
+
+    definirValores(inicio, fin);
+  }
+
+  async function inicio() {
+    const { datos, maximo, fechaMin, fechaMax } = await cargarDatos();
+    fuente.datos = datos;
+    fuente.maximo = maximo;
+
+    iniciarIndicadores(svg);
+    iniciarResumen(datos);
+
+    actualizarEjeX(fechaMin, fechaMax);
+    actualizarEjeY(maximo);
+    actualizarDimensiones();
+    lienzo.call(lupa);
+
+    window.onresize = actualizarDimensiones;
+  }
+
+  function cambiarTipo(elemento: HTMLDivElement, tipoSeleccionado: TuitsTipos) {
+    if (tipo === tipoSeleccionado) return;
+    filtros?.querySelector('.seleccionado')?.classList.remove('seleccionado');
+    elemento.classList.add('seleccionado');
+    tipo = tipoSeleccionado;
+    pintar(transformacionActual || zoomIdentity);
+  }
+
+  filtroTodos.onclick = async () => {
+    cambiarTipo(filtroTodos, 'todos');
+  };
+
+  filtroTipos.onclick = async () => {
+    cambiarTipo(filtroTipos, 'tipos');
+  };
+
+  function pintar(transformacion: ZoomTransform) {
+    ctx.clearRect(0, 0, dims.ancho, dims.alto);
+    const escala = transformacion.k;
+
+    const anchoMax = 20;
+    const ancho = convertirEscala(escala, 1, escalaMax, 0.5, anchoMax);
+    const opacidad = convertirEscala(escala, 1, 60, 0.3, 0.8);
+
+    const { datos } = fuente;
+
+    if (tipo === 'todos') {
+      ctx.fillStyle = color('todos', opacidad);
+
+      datos.forEach((punto) => {
+        const xSinTransformacion = ejeX(punto.fecha);
+        const [x] = transformacion.apply([xSinTransformacion, 0]);
+        const y = ejeY(punto.valor);
+
+        ctx.fillRect(x, y, ancho, dimsGrafica.alto - y);
+
+        if (escala > escalaMax / 4) {
+          ctx.save();
+          ctx.fillStyle = 'white';
+          ctx.fillText(`${punto.valor}`, x, y - 5);
+          ctx.restore();
+        }
+      });
+    } else {
+      datos.forEach((punto) => {
+        if (punto.tipo) {
+          const xSinTransformacion = ejeX(punto.fecha);
+          const [x] = transformacion.apply([xSinTransformacion, 0]);
+          let baseValor = 0;
+          let _y = dimsGrafica.alto;
+
+          if (punto.tipo.original) {
+            const y = ejeY(punto.tipo.original);
+
+            ctx.fillStyle = color('original', opacidad);
+            ctx.fillRect(x, y, ancho, _y - y);
+            baseValor = punto.tipo.original;
+            _y = y;
+          }
+
+          if (punto.tipo.quoted) {
+            const y = ejeY(punto.tipo.quoted + baseValor);
+
+            ctx.fillStyle = color('quoted', opacidad);
+            ctx.fillRect(x, y, ancho, _y - y);
+            baseValor = punto.tipo.quoted + baseValor;
+            _y = y;
+          }
+
+          if (punto.tipo.replied_to) {
+            const y = ejeY(punto.tipo.replied_to + baseValor);
+
+            ctx.fillStyle = color('replied_to', opacidad);
+            ctx.fillRect(x, y, ancho, _y - y);
+            baseValor = punto.tipo.replied_to + baseValor;
+            _y = y;
+          }
+
+          if (escala > escalaMax / 4) {
+            ctx.fillStyle = 'white';
+            ctx.fillText(`${punto.valor}`, x, _y - 5);
+          }
+        }
+      });
+    }
+  }
+
+  function actualizarDimensiones() {
+    dims.ancho = window.innerWidth - 1;
+    dims.alto = window.innerHeight - 100;
+    dimsGrafica.ancho = dims.ancho - margen.izq - margen.der;
+    dimsGrafica.alto = dims.alto - margen.abajo - margen.arriba;
+    svg
+      .attr('width', dimsGrafica.ancho + 50)
+      .attr('height', dimsGrafica.alto + 50)
+      .attr('style', `left:${margen.izq}px; top:${margen.arriba}px;`);
+
+    lienzo
+      .attr('width', dimsGrafica.ancho)
+      .attr('height', dimsGrafica.alto)
+      .attr('style', `left:${margen.izq}px; top:${margen.arriba}px;`);
+
+    lupa.translateExtent([
+      [0, 0],
+      [dimsGrafica.ancho, dimsGrafica.alto],
+    ]);
+
+    ejeX.range([0, dimsGrafica.ancho]);
+    ejeY.range([dimsGrafica.alto, 0]);
+
+    indicadores.y
+      ?.attr('transform', `translate(${dimsGrafica.ancho + 5},0)`)
       .transition()
       .duration(duracion)
-      .call(axisBottom(ejeX).ticks(timeWeek.every(4)));
+      .call(axisRight(ejeY));
+
+    indicadores.x
+      ?.attr('transform', `translate(${0},${dimsGrafica.alto})`)
+      .transition()
+      .duration(duracion)
+      .call(axisBottom(ejeX));
+
+    pintar(transformacionActual || zoomIdentity);
   }
-
-  function actualizarEjeY(duracion = 500) {
-    ejeY.domain([0, max(datos.map((obj) => obj[2]))]).range([dims.alto - dims.margenHor, 0]);
-    indicadorY.transition().duration(duracion).call(axisRight(ejeY));
-  }
-
-  function actualisDimensiones() {
-    dims.ancho = window.innerWidth;
-    dims.alto = window.innerHeight;
-    indicadorX.attr('transform', `translate(${dims.margenHor}, ${dims.margenVer})`);
-    indicadorY.attr('transform', `translate(${dims.margenHor / 2}, ${dims.margenVer})`);
-  }
-
-  linea.datum(
-    datos.map((d) => {
-      d[0] = new Date(d[0]);
-      return d;
-    })
-  );
-  attrLinea(linea);
-
-  console.log(datos, fechaInicial, fechaFinal, totalMs, fechaFinal.hour());
 </script>
 
-<style>
+<style lang="scss" is:global>
+  $verde: #3effd0;
+  $verdeO1: rgba(62, 255, 207, 1);
+  $negro: #22181c;
+  $morado: #5300ff;
+  $rojo: #f45b69;
+  $amarillo: rgb(255, 217, 114);
+  $azul: rgb(137, 209, 248);
+  $blanco: #f9f2f5;
+  $originales: rgb(15, 239, 183);
+  $citas: rgb(255, 217, 114);
+  $replicas: rgb(240, 209, 208);
+  $azul: rgb(62, 220, 255);
   html {
     box-sizing: border-box;
     height: 100%;
@@ -112,14 +305,191 @@ import Plantilla from '../plantillas/Plantilla.astro';
     padding: 0;
   }
 
+  html {
+    background-color: $negro;
+    color: $blanco;
+    font-family: 'Courier New', 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
+  }
+
   ::selection {
     background-color: #9cadac9a;
     color: #e2e2e2;
   }
 
-  .lineaPrincipal {
-    stroke: red;
-    /* fill: rgba(255, 255, 255, 0.7);
-    clip-path: url(#clip); */
+  .encabezado {
+    display: flex;
+  }
+
+  .tituloPagina {
+    color: $verde;
+    margin: 1em 0 0 30px;
+  }
+
+  #resumen {
+    opacity: 0.9;
+    border: 1px dotted $verde;
+    padding: 0.5em;
+    background-color: $negro;
+    z-index: 2;
+    width: 40vw;
+    margin: 10px 50px 0 auto;
+    max-width: 500px;
+    display: inline-block;
+
+    h3 {
+      letter-spacing: 2px;
+      margin: 0;
+    }
+
+    .texto {
+      font-weight: bold;
+    }
+
+    p {
+      line-height: 1;
+      margin: 0;
+    }
+
+    .fecha {
+      font-size: 0.85em;
+      letter-spacing: -1px;
+    }
+
+    .datos {
+      font-size: 0.75em;
+    }
+
+    .flechaHaciaDerecha {
+      width: 1em;
+      display: inline-block;
+      vertical-align: middle;
+
+      img {
+        width: 100%;
+      }
+    }
+  }
+
+  #barras {
+    display: flex;
+    span {
+      height: 20px;
+
+      &.originales {
+        background-color: $originales;
+      }
+
+      &.citas {
+        background-color: $citas;
+      }
+
+      &.replicas {
+        background-color: $replicas;
+      }
+    }
+
+    .valor {
+      font-weight: bold;
+      font-size: 18px;
+      color: $negro;
+    }
+  }
+
+  #contenedor {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  #lienzo {
+    position: absolute;
+    border: 1px dotted rgba(255, 255, 255, 0.5);
+  }
+
+  #filtros {
+    display: flex;
+    z-index: 9;
+    position: absolute;
+    bottom: 20px;
+    width: 100vw;
+    justify-content: center;
+    .filtro {
+      border: 1px solid $verde;
+      padding: 0.5em;
+      margin-right: 0.5em;
+      cursor: pointer;
+
+      &.seleccionado {
+        background-color: rgba($verde, 0.3);
+      }
+    }
+  }
+
+  #info {
+    position: absolute;
+    pointer-events: none;
+    max-width: 320px;
+    font-size: 0.75em;
+    line-height: 1;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 0.3em;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    p {
+      margin: 0;
+    }
+
+    &.visible {
+      opacity: 1;
+    }
+
+    .fecha {
+      font-weight: bold;
+      border-bottom: 1px dotted;
+      margin-bottom: 0.3em;
+      padding-bottom: 0.2em;
+    }
+
+    .valor {
+      font-weight: bold;
+      margin-left: 0.2em;
+    }
+  }
+
+  .campo {
+    &::before {
+      content: '';
+      width: 0.8em;
+      height: 0.8em;
+      margin-right: 0.4em;
+      display: inline-block;
+      background-color: rgb(62, 220, 255);
+    }
+  }
+
+  .citas {
+    &::before {
+      background-color: $citas;
+    }
+  }
+
+  .replicas {
+    &::before {
+      background-color: $replicas;
+    }
+  }
+
+  .originales {
+    &::before {
+      background-color: $originales;
+    }
+  }
+
+  input[type='datetime-local'] {
+    outline: none;
+
+    &:active,
+    &:focus {
+      font: bold;
+    }
   }
 </style>
