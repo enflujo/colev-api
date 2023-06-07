@@ -1,4 +1,5 @@
 import type { TuitsPorHora } from '@/tipos';
+import { margen } from './constantes';
 
 const contenedor = document.getElementById('info') as HTMLDivElement;
 const fecha = contenedor.querySelector('.fecha') as HTMLSpanElement;
@@ -18,7 +19,13 @@ export const actualizarInfo = (punto: TuitsPorHora, posicion: [x: number, y: num
   citas.innerText = `${punto.tipo?.quoted || 0}`;
   replicas.innerText = `${punto.tipo?.replied_to || 0}`;
   const dims = contenedor.getBoundingClientRect();
-  contenedor.style.transform = `translate(${posicion[0]}px, ${posicion[1] - dims.height + 10}px)`;
+  const x1 = posicion[0] + margen.izq;
+  const y1 = posicion[1];
+  const x = x1 + dims.width > window.innerWidth ? x1 - dims.width : x1;
+  const y2 = y1 - dims.height + 10;
+  const y = y2 < margen.arriba ? y1 : y2;
+
+  contenedor.style.transform = `translate(${x}px, ${y}px)`;
 };
 
 export const mostrarInfo = () => {

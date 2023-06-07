@@ -60,6 +60,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import { actualizarInfo, esconderInfo, mostrarInfo } from '@/modulos/lineaTuits/informacion';
   import { definirValores } from '@/modulos/lineaTuits/camposFechas';
   import { fechasActuales } from '@/modulos/lineaTuits/cerebro';
+  import { fechasIgualesAHora } from '@/utilidades/ayudas';
 
   const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
   const escalaMax = 500;
@@ -99,15 +100,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
     const fecha = ejeX.invert(transformacionActual.invertX(posicion[0]));
 
     const punto = fuente.datos.find((d) => {
-      const a1 = d.fecha.getFullYear();
-      const a2 = fecha.getFullYear();
-      const m1 = d.fecha.getMonth();
-      const m2 = fecha.getMonth();
-      const d1 = d.fecha.getDate();
-      const d2 = fecha.getDate();
-      const h1 = d.fecha.getHours();
-      const h2 = fecha.getHours();
-      return a1 === a2 && m1 === m2 && d1 === d2 && h1 === h2;
+      return fechasIgualesAHora(d.fecha, fecha);
     });
 
     if (punto) {
@@ -231,7 +224,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   }
 
   function actualizarDimensiones() {
-    dims.ancho = window.innerWidth;
+    dims.ancho = window.innerWidth - 1;
     dims.alto = window.innerHeight - 100;
     dimsGrafica.ancho = dims.ancho - margen.izq - margen.der;
     dimsGrafica.alto = dims.alto - margen.abajo - margen.arriba;
@@ -310,6 +303,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
   #lienzo {
     position: absolute;
+    border: 1px dotted rgba(255, 255, 255, 0.5);
   }
 
   #filtros {
