@@ -43,7 +43,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
 <script>
   import { convertirEscala } from '@enflujo/alquimia';
-  import { ZoomBehavior, axisBottom, axisRight, pointer, select, zoom, zoomIdentity } from 'd3';
+  import { axisBottom, axisRight, pointer, select, zoom, zoomIdentity } from 'd3';
   import type { Selection, D3ZoomEvent, ZoomTransform } from 'd3';
   import type { TuitsDatos, TuitsPorHora, TuitsTipos } from '@/tipos';
   import { cargarDatos } from '@/modulos/lineaTuits/cargarDatos';
@@ -60,7 +60,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import { actualizarInfo, esconderInfo, mostrarInfo } from '@/modulos/lineaTuits/informacion';
   import { definirValores } from '@/modulos/lineaTuits/camposFechas';
   import { fechasActuales } from '@/modulos/lineaTuits/cerebro';
-  import { instanciaFechas } from '@/modulos/lineaTuits/fechas';
 
   const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
   const escalaMax = 500;
@@ -90,7 +89,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
         hour: '2-digit',
       });
     }
-    console.log(llave, fecha);
   });
 
   lienzo.on('mouseenter', mostrarInfo);
@@ -99,13 +97,23 @@ import Plantilla from '../plantillas/Plantilla.astro';
   lienzo.on('mousemove', (evento) => {
     const posicion = pointer(evento);
     const fecha = ejeX.invert(transformacionActual.invertX(posicion[0]));
-    fecha.setMinutes(0);
-    fecha.setSeconds(0);
-    fecha.setMilliseconds(0);
-    const punto = fuente.datos.find((d) => d.fecha >= fecha);
+
+    const punto = fuente.datos.find((d) => {
+      const a1 = d.fecha.getFullYear();
+      const a2 = fecha.getFullYear();
+      const m1 = d.fecha.getMonth();
+      const m2 = fecha.getMonth();
+      const d1 = d.fecha.getDate();
+      const d2 = fecha.getDate();
+      const h1 = d.fecha.getHours();
+      const h2 = fecha.getHours();
+      return a1 === a2 && m1 === m2 && d1 === d2 && h1 === h2;
+    });
 
     if (punto) {
       actualizarInfo(punto, posicion);
+    } else {
+      actualizarInfo({ valor: 0, fecha, dia: 0 }, posicion);
     }
   });
 

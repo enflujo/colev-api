@@ -1,6 +1,5 @@
-import type { TuitsPorHora } from '@/tipos';
+import type { TuitsDatos, TuitsPorHora } from '@/tipos';
 import { servidorUrl, zona } from './constantes';
-import { procesarDatos } from './procesarDatos';
 import { instanciaFechas } from './fechas';
 import { definirMinMaxFechas, definirValorDesde, definirValorHasta } from './camposFechas';
 
@@ -21,4 +20,20 @@ export async function cargarDatos() {
   definirValorHasta(fechaMax);
 
   return { datos, maximo, fechaMin, fechaMax };
+}
+
+function procesarDatos(datos: TuitsDatos[]) {
+  const conTipo = datos[0].length === 4;
+  const procesados = datos.map((d): TuitsPorHora => {
+    const fecha = new Date(d[0]);
+
+    if (!conTipo) {
+      return { fecha, dia: d[1], valor: d[2] };
+    } else {
+      return { fecha, dia: d[1], valor: d[2], tipo: d[3] };
+    }
+  });
+
+  procesados.sort((a, b) => +a.fecha - +b.fecha);
+  return procesados;
 }

@@ -6,7 +6,6 @@ const filtroHasta = document.getElementById('filtroHasta') as HTMLInputElement;
 
 filtroDesde.onchange = (evento) => {
   const { value } = evento.target as HTMLInputElement;
-
   fechasActuales.setKey('inicio', new Date(value));
 };
 
@@ -29,10 +28,12 @@ export const definirValores = (inicio: Date, fin: Date) => {
 
 export const definirValorDesde = (fecha: Date) => {
   filtroDesde.value = fechaATexto(fecha);
+  filtroDesde.dispatchEvent(new Event('change'));
 };
 
 export const definirValorHasta = (fecha: Date) => {
   filtroHasta.value = fechaATexto(fecha);
+  filtroHasta.dispatchEvent(new Event('change'));
 };
 
 export const valorDesde = () => filtroDesde.value;
