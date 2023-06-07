@@ -9,3 +9,7 @@ export const fechasIgualesAHora = (fecha1: Date, fecha2: Date) => {
   const h2 = fecha2.getHours();
   return a1 === a2 && m1 === m2 && d1 === d2 && h1 === h2;
 };
+
+export const porcentaje = (total: number, valor: number) => {
+  return Math.round((valor / total) * 100);
+};

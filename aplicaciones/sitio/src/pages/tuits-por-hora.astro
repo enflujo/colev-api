@@ -8,7 +8,31 @@ import Plantilla from '../plantillas/Plantilla.astro';
   imagen="https://colev.enflujo.com/imgs/colev-enflujo_og.webp"
 >
   <main>
-    <div id="sombra"></div>
+    <section class="encabezado">
+      <h1 class="tituloPagina">Twitter en la Pandemia</h1>
+      <div id="resumen">
+        <h3>Resumen</h3>
+        <!-- <p class="texto">En las fechas:</p> -->
+        <p>
+          <span class="desde fecha"></span>
+          <span class="flechaHaciaDerecha"><img src="/imgs/flechaDerecha.svg" alt="Flecha hacia la derecha" /></span>
+          <span class="hasta fecha"></span>
+        </p>
+
+        <div class="datos">
+          <p class="total campo"><span class="titulo">Total:</span><span class="valor"></span></p>
+          <p class="originales campo"><span class="titulo">Originales:</span><span class="valor"></span></p>
+          <p class="citas campo"><span class="titulo">Citados (quoted):</span><span class="valor"></span></p>
+          <p class="replicas campo"><span class="titulo">Respuestas (replied_to):</span><span class="valor"></span></p>
+          <div id="barras">
+            <span class="originales"><span class="valor"></span></span>
+            <span class="citas"><span class="valor"></span></span>
+            <span class="replicas"><span class="valor"></span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <svg id="contenedor"></svg>
     <canvas id="lienzo"></canvas>
     <div id="filtros">
@@ -59,8 +83,8 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import { escalarEjeX } from '@/modulos/lineaTuits/indicadores';
   import { actualizarInfo, esconderInfo, mostrarInfo } from '@/modulos/lineaTuits/informacion';
   import { definirValores } from '@/modulos/lineaTuits/camposFechas';
-  import { fechasActuales } from '@/modulos/lineaTuits/cerebro';
   import { fechasIgualesAHora } from '@/utilidades/ayudas';
+  import { iniciarResumen } from '@/modulos/lineaTuits/resumen';
 
   const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
   const escalaMax = 500;
@@ -74,23 +98,11 @@ import Plantilla from '../plantillas/Plantilla.astro';
   const filtroTodos = document.getElementById('todos') as HTMLDivElement;
   const filtroTipos = document.getElementById('tipos') as HTMLDivElement;
   const filtros = document.getElementById('filtros');
-  const sombra = document.getElementById('sombra') as HTMLDivElement;
 
   let tipo = 'todos';
   let transformacionActual: ZoomTransform = zoomIdentity;
 
   inicio();
-
-  fechasActuales.subscribe((fecha, llave) => {
-    if (llave === 'inicio') {
-      sombra.innerText = fecha.inicio.toLocaleString('es-CO', {
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit',
-        hour: '2-digit',
-      });
-    }
-  });
 
   lienzo.on('mouseenter', mostrarInfo);
   lienzo.on('mouseleave', esconderInfo);
@@ -127,6 +139,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
     fuente.maximo = maximo;
 
     iniciarIndicadores(svg);
+    iniciarResumen(datos);
 
     actualizarEjeX(fechaMin, fechaMax);
     actualizarEjeY(maximo);
@@ -228,7 +241,10 @@ import Plantilla from '../plantillas/Plantilla.astro';
     dims.alto = window.innerHeight - 100;
     dimsGrafica.ancho = dims.ancho - margen.izq - margen.der;
     dimsGrafica.alto = dims.alto - margen.abajo - margen.arriba;
-    svg.attr('width', dims.ancho).attr('height', dims.alto);
+    svg
+      .attr('width', dimsGrafica.ancho + 50)
+      .attr('height', dimsGrafica.alto + 50)
+      .attr('style', `left:${margen.izq}px; top:${margen.arriba}px;`);
 
     lienzo
       .attr('width', dimsGrafica.ancho)
@@ -244,13 +260,13 @@ import Plantilla from '../plantillas/Plantilla.astro';
     ejeY.range([dimsGrafica.alto, 0]);
 
     indicadores.y
-      ?.attr('transform', `translate(${dims.ancho - margen.der},${margen.arriba})`)
+      ?.attr('transform', `translate(${dimsGrafica.ancho + 5},0)`)
       .transition()
       .duration(duracion)
       .call(axisRight(ejeY));
 
     indicadores.x
-      ?.attr('transform', `translate(${margen.izq},${dimsGrafica.alto + margen.arriba})`)
+      ?.attr('transform', `translate(${0},${dimsGrafica.alto})`)
       .transition()
       .duration(duracion)
       .call(axisBottom(ejeX));
@@ -268,6 +284,10 @@ import Plantilla from '../plantillas/Plantilla.astro';
   $amarillo: rgb(255, 217, 114);
   $azul: rgb(137, 209, 248);
   $blanco: #f9f2f5;
+  $originales: rgb(15, 239, 183);
+  $citas: rgb(255, 217, 114);
+  $replicas: rgb(240, 209, 208);
+  $azul: rgb(62, 220, 255);
   html {
     box-sizing: border-box;
     height: 100%;
@@ -294,6 +314,85 @@ import Plantilla from '../plantillas/Plantilla.astro';
   ::selection {
     background-color: #9cadac9a;
     color: #e2e2e2;
+  }
+
+  .encabezado {
+    display: flex;
+  }
+
+  .tituloPagina {
+    color: $verde;
+    margin: 1em 0 0 30px;
+  }
+
+  #resumen {
+    opacity: 0.9;
+    border: 1px dotted $verde;
+    padding: 0.5em;
+    background-color: $negro;
+    z-index: 2;
+    width: 40vw;
+    margin: 10px 50px 0 auto;
+    max-width: 500px;
+    display: inline-block;
+
+    h3 {
+      letter-spacing: 2px;
+      margin: 0;
+    }
+
+    .texto {
+      font-weight: bold;
+    }
+
+    p {
+      line-height: 1;
+      margin: 0;
+    }
+
+    .fecha {
+      font-size: 0.85em;
+      letter-spacing: -1px;
+    }
+
+    .datos {
+      font-size: 0.75em;
+    }
+
+    .flechaHaciaDerecha {
+      width: 1em;
+      display: inline-block;
+      vertical-align: middle;
+
+      img {
+        width: 100%;
+      }
+    }
+  }
+
+  #barras {
+    display: flex;
+    span {
+      height: 20px;
+
+      &.originales {
+        background-color: $originales;
+      }
+
+      &.citas {
+        background-color: $citas;
+      }
+
+      &.replicas {
+        background-color: $replicas;
+      }
+    }
+
+    .valor {
+      font-weight: bold;
+      font-size: 18px;
+      color: $negro;
+    }
   }
 
   #contenedor {
@@ -354,34 +453,34 @@ import Plantilla from '../plantillas/Plantilla.astro';
       font-weight: bold;
       margin-left: 0.2em;
     }
+  }
 
-    .campo {
-      &::before {
-        content: '';
-        width: 0.8em;
-        height: 0.8em;
-        margin-right: 0.4em;
-        display: inline-block;
-        background-color: rgb(62, 220, 255);
-      }
+  .campo {
+    &::before {
+      content: '';
+      width: 0.8em;
+      height: 0.8em;
+      margin-right: 0.4em;
+      display: inline-block;
+      background-color: rgb(62, 220, 255);
     }
+  }
 
-    .citas {
-      &::before {
-        background-color: rgb(255, 217, 114);
-      }
+  .citas {
+    &::before {
+      background-color: $citas;
     }
+  }
 
-    .replicas {
-      &::before {
-        background-color: rgb(240, 209, 208);
-      }
+  .replicas {
+    &::before {
+      background-color: $replicas;
     }
+  }
 
-    .originales {
-      &::before {
-        background-color: rgb(15, 239, 183);
-      }
+  .originales {
+    &::before {
+      background-color: $originales;
     }
   }
 
@@ -392,13 +491,5 @@ import Plantilla from '../plantillas/Plantilla.astro';
     &:focus {
       font: bold;
     }
-  }
-
-  #sombra {
-    position: absolute;
-    top: 30px;
-    left: 30px;
-    font-size: 2em;
-    opacity: 0.3;
   }
 </style>

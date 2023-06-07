@@ -9,6 +9,11 @@ filtroDesde.onchange = (evento) => {
   fechasActuales.setKey('inicio', new Date(value));
 };
 
+filtroHasta.onchange = (evento) => {
+  const { value } = evento.target as HTMLInputElement;
+  fechasActuales.setKey('fin', new Date(value));
+};
+
 function fechaATexto(fecha: Date) {
   return instanciaFechas().tz(fecha).format('YYYY-MM-DDTHH:00');
 }

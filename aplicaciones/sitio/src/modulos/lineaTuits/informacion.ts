@@ -22,8 +22,7 @@ export const actualizarInfo = (punto: TuitsPorHora, posicion: [x: number, y: num
   const x1 = posicion[0] + margen.izq;
   const y1 = posicion[1];
   const x = x1 + dims.width > window.innerWidth ? x1 - dims.width : x1;
-  const y2 = y1 - dims.height + 10;
-  const y = y2 < margen.arriba ? y1 : y2;
+  const y = y1 - dims.height - 5;
 
   contenedor.style.transform = `translate(${x}px, ${y}px)`;
 };
