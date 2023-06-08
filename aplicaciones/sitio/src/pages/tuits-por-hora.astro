@@ -38,21 +38,9 @@ import Plantilla from '../plantillas/Plantilla.astro';
     <div id="filtros">
       <div id="todos" class="filtro seleccionado">Todos</div>
       <div id="tipos" class="filtro">Por tipos</div>
-      <input
-        type="datetime-local"
-        id="filtroDesde"
-        value="2018-06-12T19:30"
-        min="2018-06-07T00:00"
-        max="2018-06-14T00:00"
-      />
+      <input type="datetime-local" id="filtroDesde" />
 
-      <input
-        type="datetime-local"
-        id="filtroHasta"
-        value="2018-06-12T19:30"
-        min="2018-06-07T00:00"
-        max="2018-06-14T00:00"
-      />
+      <input type="datetime-local" id="filtroHasta" />
     </div>
 
     <div id="info">
@@ -372,8 +360,9 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
   #barras {
     display: flex;
+    margin-top: 0.3em;
     span {
-      height: 20px;
+      height: 15px;
 
       &.originales {
         background-color: $originales;
@@ -390,7 +379,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
     .valor {
       font-weight: bold;
-      font-size: 18px;
+      font-size: 13px;
       color: $negro;
     }
   }

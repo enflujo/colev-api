@@ -20,8 +20,8 @@ function fechaATexto(fecha: Date) {
   return fecha.toLocaleString('es-CO', {
     year: 'numeric',
     month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
+    day: 'numeric',
+    hour: 'numeric',
   });
 }
 

@@ -11,5 +11,5 @@ export const fechasIgualesAHora = (fecha1: Date, fecha2: Date) => {
 };
 
 export const porcentaje = (total: number, valor: number) => {
-  return Math.round((valor / total) * 100);
+  return ((valor / total) * 100).toFixed(2);
 };
