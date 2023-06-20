@@ -8,6 +8,7 @@ import { rutaTuitsPorDia } from './rutas/tuitsPorDia';
 import { rutaTuitsPorHora } from './rutas/tuitsPorHora';
 import { rutaTuitsPorSemana } from './rutas/tuitsPorSemana';
 import { rutaTuitsPorHoraTipo } from './rutas/tuitsPorHoraTipo';
+import { rutaTuitsPorContextoEntidad } from './rutas/tuitsPorContextoEntidad';
 
 const servidor: FastifyInstance = fastify();
 const PUERTO = process.env.API_PUERTO ? +process.env.API_PUERTO : 8080;
@@ -23,6 +24,7 @@ servidor.register(rutaTuitsPorSemana, { prefix: '/tally' });
 servidor.register(rutaTuitsPorHora, { prefix: '/tally' });
 servidor.register(rutaTendencias, { prefix: '/tally' });
 servidor.register(rutaTuitsPorHoraTipo, { prefix: '/tally' });
+servidor.register(rutaTuitsPorContextoEntidad, { prefix: '/tally' });
 
 const inicio = async () => {
   try {
