@@ -8,6 +8,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   imagen="https://colev.enflujo.com/imgs/colev-enflujo_og.webp"
 >
   <main>
+    <div id="cargador" class="activo">... Cargando ...</div>
     <section class="encabezado">
       <h1 class="tituloPagina">Twitter en la Pandemia</h1>
       <div id="resumen">
@@ -76,7 +77,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
   const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
   const escalaMax = 500;
-
   const dims = { ancho: 0, alto: 0, rangoY: margen.abajo };
   const dimsGrafica = { ancho: 0, alto: 0 };
   const svg = select('#contenedor');
@@ -86,10 +86,12 @@ import Plantilla from '../plantillas/Plantilla.astro';
   const filtroTodos = document.getElementById('todos') as HTMLDivElement;
   const filtroTipos = document.getElementById('tipos') as HTMLDivElement;
   const filtros = document.getElementById('filtros');
+  const cargador = document.getElementById('cargador') as HTMLDivElement;
 
   let tipo = 'todos';
   let transformacionActual: ZoomTransform = zoomIdentity;
 
+  actualizarDimensiones();
   inicio();
 
   lienzo.on('mouseenter', mostrarInfo);
@@ -131,9 +133,12 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
     actualizarEjeX(fechaMin, fechaMax);
     actualizarEjeY(maximo);
-    actualizarDimensiones();
+
     lienzo.call(lupa);
 
+    pintar(transformacionActual || zoomIdentity);
+
+    cargador.classList.remove('activo');
     window.onresize = actualizarDimensiones;
   }
 
@@ -479,6 +484,33 @@ import Plantilla from '../plantillas/Plantilla.astro';
     &:active,
     &:focus {
       font: bold;
+    }
+  }
+
+  #cargador {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+
+    &.activo {
+      display: block;
+      animation: palpito 0.7s ease-in-out infinite;
+    }
+  }
+
+  @keyframes palpito {
+    0% {
+      opacity: 0.5;
+    }
+
+    50% {
+      opacity: 0.95;
+    }
+
+    100% {
+      opacity: 0.49;
     }
   }
 </style>
