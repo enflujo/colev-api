@@ -1,0 +1,158 @@
+---
+import Plantilla from '../plantillas/Plantilla.astro';
+---
+
+<Plantilla
+  titulo="Contextos de los Tuits durante la pandemia en Colombia."
+  descripcion="Proyectos de visualización de datos para Colev desarrollados por el Laboratorio EnFlujo."
+  imagen="https://colev.enflujo.com/imgs/colev-enflujo_og.webp"
+>
+  <main id="contextos">
+    <div id="cargador" class="activo">... Cargando ...</div>
+    <section class="encabezado">
+      <h1 class="tituloPagina">Twitter en la Pandemia</h1>
+    </section>
+
+    <div id="listas">
+      <section id="contenedorEntidades" class="contenedor">
+        <h2>Entidades (entities)</h2>
+        <p class="descripcion">
+          Las entidades (personas, lugares, productos, organizaciones, etc.) más mencionadas en el contexto de los tuits
+          durante la pandemia.
+        </p>
+      </section>
+
+      <section id="contenedorDominios" class="contenedor">
+        <h2>Categorías (domains)</h2>
+        <p class="descripcion">
+          Las categorías son agrupaciones más generales que describen cada una de las "entidades" que contextualizan los
+          tuits.
+        </p>
+      </section>
+    </div>
+
+    <div id="leyenda"></div>
+  </main>
+</Plantilla>
+
+<script>
+  import { esconderCargador } from '@/modulos/cargador';
+  import { servidorUrl } from '@/modulos/constantes';
+  import { porcentaje } from '@/utilidades/ayudas';
+
+  const contenedorEntidades = document.getElementById('contenedorEntidades') as HTMLUListElement;
+  const contenedorDominios = document.getElementById('contenedorDominios') as HTMLUListElement;
+  const contenedorLeyenda = document.getElementById('leyenda') as HTMLDivElement;
+
+  type Entidad = [nombre: string, cantidad: number];
+
+  inicio();
+
+  async function inicio() {
+    const { total } = await fetch(`${servidorUrl}/tuits-total`).then((respuesta) => respuesta.json());
+    const datosEntidades = await fetch(`${servidorUrl}/tuits-por-contexto-entidad`).then((respuesta) =>
+      respuesta.json()
+    );
+
+    const datosDominios = await fetch(`${servidorUrl}/tuits-por-contexto-dominio`).then((respuesta) =>
+      respuesta.json()
+    );
+
+    if (datosEntidades.length) {
+      datosEntidades.forEach((entidad: Entidad) => {
+        crearEntidad(total, entidad, contenedorEntidades);
+      });
+    }
+
+    if (datosDominios.length) {
+      datosDominios.forEach((entidad: Entidad) => {
+        crearEntidad(total, entidad, contenedorDominios);
+      });
+    }
+
+    contenedorLeyenda.innerText = `Numero total de tuits: ${total}`;
+
+    esconderCargador();
+  }
+
+  function crearEntidad(max: number, entidad: Entidad, contenedor: HTMLUListElement) {
+    const elemento = document.createElement('div');
+    const nombre = document.createElement('p');
+    const valor = document.createElement('span');
+    const colombina = document.createElement('span');
+    const termometro = document.createElement('span');
+    const ancho = porcentaje(max, entidad[1]);
+
+    elemento.className = 'entidad entidadContexto';
+    nombre.className = 'nombre';
+    valor.className = 'valor';
+    nombre.innerText = `${entidad[0]}`;
+    valor.innerText = ` (instancias: ${entidad[1]} | porcentaje: ${porcentaje(max, entidad[1])}%)`;
+
+    colombina.className = 'colombina';
+    termometro.className = 'termometro';
+    termometro.style.width = `${ancho}%`;
+
+    colombina.appendChild(termometro);
+    nombre.appendChild(valor);
+    elemento.appendChild(nombre);
+    elemento.appendChild(colombina);
+    contenedor.appendChild(elemento);
+  }
+</script>
+
+<style lang="scss" is:global>
+  @import '../scss/twitter.scss';
+
+  #contextos {
+    padding-bottom: 5em;
+
+    .descripcion {
+      font-size: 1.3em;
+      padding-bottom: 1em;
+      border-bottom: 1px dotted;
+    }
+
+    #listas {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .contenedor {
+      width: 45vw;
+    }
+
+    .nombre {
+      margin-bottom: 0;
+      font-size: 1.2em;
+      font-weight: bold;
+
+      .valor {
+        font-weight: normal;
+
+        font-size: 0.85em;
+      }
+    }
+
+    .colombina {
+      height: 16px;
+      display: block;
+      background-color: $gris;
+    }
+
+    .termometro {
+      height: 16px;
+      display: block;
+      background-color: $amarillo;
+    }
+
+    #leyenda {
+      background-color: rgba(68, 138, 176, 0.9);
+      font-size: 1.4em;
+      position: fixed;
+      padding: 1em;
+      text-align: center;
+      bottom: 0;
+    }
+  }
+</style>

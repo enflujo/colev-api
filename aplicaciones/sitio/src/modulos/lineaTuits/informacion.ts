@@ -1,5 +1,5 @@
 import type { TuitsPorHora } from '@/tipos';
-import { margen } from './constantes';
+import { margen } from '../constantes';
 
 const contenedor = document.getElementById('info') as HTMLDivElement;
 const fecha = contenedor.querySelector('.fecha') as HTMLSpanElement;

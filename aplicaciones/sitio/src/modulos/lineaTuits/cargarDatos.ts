@@ -1,5 +1,5 @@
 import type { TuitsDatos, TuitsPorHora } from '@/tipos';
-import { servidorUrl, zona } from './constantes';
+import { servidorUrl, zona } from '../constantes';
 import { instanciaFechas } from './fechas';
 import { definirMinMaxFechas, definirValorDesde, definirValorHasta } from './camposFechas';
 
