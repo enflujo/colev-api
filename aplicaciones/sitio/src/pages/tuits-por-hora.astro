@@ -8,11 +8,11 @@ import Plantilla from '../plantillas/Plantilla.astro';
   imagen="https://colev.enflujo.com/imgs/colev-enflujo_og.webp"
 >
   <main>
+    <div id="cargador" class="activo">... Cargando ...</div>
     <section class="encabezado">
       <h1 class="tituloPagina">Twitter en la Pandemia</h1>
       <div id="resumen">
         <h3>Resumen</h3>
-        <!-- <p class="texto">En las fechas:</p> -->
         <p>
           <span class="desde fecha"></span>
           <span class="flechaHaciaDerecha"><img src="/imgs/flechaDerecha.svg" alt="Flecha hacia la derecha" /></span>
@@ -59,7 +59,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import type { Selection, D3ZoomEvent, ZoomTransform } from 'd3';
   import type { TuitsDatos, TuitsPorHora, TuitsTipos } from '@/tipos';
   import { cargarDatos } from '@/modulos/lineaTuits/cargarDatos';
-  import { color, duracion, margen } from '@/modulos/lineaTuits/constantes';
+  import { color, duracion, margen } from '@/modulos/constantes';
   import {
     actualizarEjeX,
     actualizarEjeY,
@@ -73,10 +73,10 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import { definirValores } from '@/modulos/lineaTuits/camposFechas';
   import { fechasIgualesAHora } from '@/utilidades/ayudas';
   import { iniciarResumen } from '@/modulos/lineaTuits/resumen';
+  import { esconderCargador } from '@/modulos/cargador';
 
   const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
   const escalaMax = 500;
-
   const dims = { ancho: 0, alto: 0, rangoY: margen.abajo };
   const dimsGrafica = { ancho: 0, alto: 0 };
   const svg = select('#contenedor');
@@ -90,11 +90,12 @@ import Plantilla from '../plantillas/Plantilla.astro';
   let tipo = 'todos';
   let transformacionActual: ZoomTransform = zoomIdentity;
 
+  iniciarIndicadores(svg);
+  actualizarDimensiones();
   inicio();
 
   lienzo.on('mouseenter', mostrarInfo);
   lienzo.on('mouseleave', esconderInfo);
-
   lienzo.on('mousemove', (evento) => {
     const posicion = pointer(evento);
     const fecha = ejeX.invert(transformacionActual.invertX(posicion[0]));
@@ -126,14 +127,15 @@ import Plantilla from '../plantillas/Plantilla.astro';
     fuente.datos = datos;
     fuente.maximo = maximo;
 
-    iniciarIndicadores(svg);
     iniciarResumen(datos);
 
     actualizarEjeX(fechaMin, fechaMax);
     actualizarEjeY(maximo);
-    actualizarDimensiones();
+
     lienzo.call(lupa);
 
+    pintar(transformacionActual || zoomIdentity);
+    esconderCargador();
     window.onresize = actualizarDimensiones;
   }
 
@@ -264,53 +266,10 @@ import Plantilla from '../plantillas/Plantilla.astro';
 </script>
 
 <style lang="scss" is:global>
-  $verde: #3effd0;
-  $verdeO1: rgba(62, 255, 207, 1);
-  $negro: #22181c;
-  $morado: #5300ff;
-  $rojo: #f45b69;
-  $amarillo: rgb(255, 217, 114);
-  $azul: rgb(137, 209, 248);
-  $blanco: #f9f2f5;
-  $originales: rgb(15, 239, 183);
-  $citas: rgb(255, 217, 114);
-  $replicas: rgb(240, 209, 208);
-  $azul: rgb(62, 220, 255);
-  html {
-    box-sizing: border-box;
-    height: 100%;
-  }
-
-  *,
-  *:before,
-  *:after {
-    box-sizing: inherit;
-  }
-
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-  }
-
-  html {
-    background-color: $negro;
-    color: $blanco;
-    font-family: 'Courier New', 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
-  }
-
-  ::selection {
-    background-color: #9cadac9a;
-    color: #e2e2e2;
-  }
+  @import '../scss/twitter.scss';
 
   .encabezado {
     display: flex;
-  }
-
-  .tituloPagina {
-    color: $verde;
-    margin: 1em 0 0 30px;
   }
 
   #resumen {

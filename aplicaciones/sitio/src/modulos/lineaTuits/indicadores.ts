@@ -1,6 +1,6 @@
 import { BaseType, Selection, axisBottom, scaleLinear, scaleTime } from 'd3';
 import type { ZoomTransform } from 'd3';
-import { duracion } from './constantes';
+import { duracion } from '../constantes';
 
 type SeleccionD3 = Selection<SVGGElement, unknown, HTMLElement, any>;
 type Indicadores = { x?: SeleccionD3; y?: SeleccionD3 };

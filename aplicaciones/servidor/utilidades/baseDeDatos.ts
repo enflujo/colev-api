@@ -11,7 +11,7 @@ const { USAR_CACHE, BD_USUARIO, BD_CLAVE, BD_PUERTO, CACHE_PUERTO } = process.en
 const cliente = new MongoClient(`mongodb://${BD_USUARIO}:${BD_CLAVE}@localhost:${BD_PUERTO}/?directConnection=true`);
 const cache = new Keyv({
   store: new KeyvRedis(`redis://localhost:${CACHE_PUERTO}`),
-  // ttl: ms('15s'),
+  ttl: ms('15s'),
   namespace: 'colev-api-cache',
 });
 

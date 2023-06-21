@@ -75,8 +75,15 @@ export type RespuestaTuitsPorSemana = {
   total: number;
 };
 
+export type RespuestaTuitsContexto = {
+  _id: { id: string | null; name?: string; description?: string };
+  total: number;
+};
+
 export type TuitsPorDia = [dia: string, total: number];
 export type TuitsPorHora = [dia: string, hora: number, total: number];
 export type TuitsPorSemana = [dia: string, semana: number, total: number];
 export type DatoTuitTipos = [fecha: string, dia: number, total: number, tuits: TiposTuits];
 export type TiposTuits = { [llave: string]: number };
+
+export type TuitsContexto = [nombre: string, cantidad: number];

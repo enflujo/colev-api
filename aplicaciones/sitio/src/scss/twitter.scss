@@ -1,0 +1,40 @@
+@import './twitter/constantes';
+@import './twitter/normalizar';
+
+html {
+  background-color: $negro;
+  color: $blanco;
+  font-family: 'Courier New', 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
+}
+
+.tituloPagina {
+  color: $verde;
+  margin: 1em 0 0 30px;
+}
+
+#cargador {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+
+  &.activo {
+    display: block;
+    animation: palpito 0.7s ease-in-out infinite;
+  }
+}
+
+@keyframes palpito {
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0.49;
+  }
+}
