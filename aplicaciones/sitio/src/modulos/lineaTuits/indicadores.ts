@@ -1,5 +1,5 @@
-import { BaseType, Selection, axisBottom, scaleLinear, scaleTime } from 'd3';
-import type { ZoomTransform } from 'd3';
+import { axisBottom, scaleLinear, scaleTime } from 'd3';
+import type { BaseType, Selection, ZoomTransform } from 'd3';
 import { duracion } from '../constantes';
 
 type SeleccionD3 = Selection<SVGGElement, unknown, HTMLElement, any>;

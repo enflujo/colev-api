@@ -74,6 +74,7 @@ import Plantilla from '../plantillas/Plantilla.astro';
   import { fechasIgualesAHora } from '@/utilidades/ayudas';
   import { iniciarResumen } from '@/modulos/lineaTuits/resumen';
   import { esconderCargador } from '@/modulos/cargador';
+  import { fechasActuales } from '@/modulos/lineaTuits/cerebro';
 
   const fuente: { datos: TuitsPorHora[]; maximo: number } = { datos: [], maximo: 0 };
   const escalaMax = 500;
@@ -111,15 +112,25 @@ import Plantilla from '../plantillas/Plantilla.astro';
     }
   });
 
+  fechasActuales.subscribe((fechas) => {
+    if (fechas.inicio && fechas.fin) {
+      const transformacion = zoomIdentity.translate(ejeX(fechas.inicio), ejeX(fechas.fin));
+      // lienzo.call(lupa.transform, transformacion);
+    }
+
+    // escalarEjeX(transformacionActual);
+    pintar(transformacionActual);
+  });
+
   function escalar({ transform }: D3ZoomEvent<SVGElement, TuitsDatos>) {
     escalarEjeX(transform);
-    pintar(transform);
-    transformacionActual = transform;
 
     const inicio = ejeX.invert(transform.invertX(0));
     const fin = ejeX.invert(transform.invertX(dimsGrafica.ancho));
 
     definirValores(inicio, fin);
+
+    transformacionActual = transform;
   }
 
   async function inicio() {
@@ -266,7 +277,8 @@ import Plantilla from '../plantillas/Plantilla.astro';
 </script>
 
 <style lang="scss" is:global>
-  @import '../scss/twitter.scss';
+  @use '../scss/twitter.scss';
+  @use '../scss/twitter/constantes' as *;
 
   .encabezado {
     display: flex;

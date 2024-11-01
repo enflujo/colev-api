@@ -1,8 +1,8 @@
-@import './twitter/constantes';
-@import './twitter/normalizar';
+@use './twitter/constantes' as *;
+@use './twitter/normalizar' as *;
 
 html {
-  background-color: $negro;
+  background-color: #22181c;
   color: $blanco;
   font-family: 'Courier New', 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
 }

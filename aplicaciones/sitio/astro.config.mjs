@@ -23,4 +23,13 @@ export default defineConfig({
 
     robotsTxt(),
   ],
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler',
+        },
+      },
+    },
+  },
 });

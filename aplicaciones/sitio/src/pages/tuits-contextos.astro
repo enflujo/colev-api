@@ -102,7 +102,8 @@ import Plantilla from '../plantillas/Plantilla.astro';
 </script>
 
 <style lang="scss" is:global>
-  @import '../scss/twitter.scss';
+  @use '../scss/twitter.scss';
+  @use '../scss/twitter/constantes' as *;
 
   #contextos {
     padding-bottom: 5em;
