@@ -31,13 +31,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@astrojs/compiler@npm:^1.5.0":
-  version: 1.8.2
-  resolution: "@astrojs/compiler@npm:1.8.2"
-  checksum: 10c0/8cb32dec9d1447032421eea728e48cc55901f32872de84621f3da1b5cc27f22d5eef1cd37199f752e85da8d21353580a4bacabfb21ebbb3fdae4db8e1d5297aa
-  languageName: node
-  linkType: hard
-
 "@astrojs/compiler@npm:^2.10.3, @astrojs/compiler@npm:^2.9.1":
   version: 2.10.3
   resolution: "@astrojs/compiler@npm:2.10.3"
@@ -2691,7 +2684,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"autoprefixer@npm:^10.4.14":
+"autoprefixer@npm:^10.4.20":
   version: 10.4.20
   resolution: "autoprefixer@npm:10.4.20"
   dependencies:
@@ -3098,7 +3091,7 @@ __metadata:
   dependencies:
     concurrently: "npm:^8.2.0"
     nodemon: "npm:^3.1.7"
-    prettier: "npm:^2.8.8"
+    prettier: "npm:^3.3.3"
     prettier-plugin-astro: "npm:^0.14.1"
   languageName: unknown
   linkType: soft
@@ -6886,7 +6879,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.4.23, postcss@npm:^8.4.24, postcss@npm:^8.4.27, postcss@npm:^8.4.43, postcss@npm:^8.4.47":
+"postcss@npm:^8.4.23, postcss@npm:^8.4.27, postcss@npm:^8.4.43, postcss@npm:^8.4.47":
   version: 8.4.47
   resolution: "postcss@npm:8.4.47"
   dependencies:
@@ -6938,17 +6931,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-astro@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "prettier-plugin-astro@npm:0.10.0"
-  dependencies:
-    "@astrojs/compiler": "npm:^1.5.0"
-    prettier: "npm:^2.8.8"
-    sass-formatter: "npm:^0.7.6"
-  checksum: 10c0/ce08c298ffada4ead9b00e20da47b56a36f6634bf1cd3808c766cb97ca9f67acc6796be2f4e038ee53a0f29d80e96dd6da2ceae3876226882dccca257037ad53
-  languageName: node
-  linkType: hard
-
 "prettier-plugin-astro@npm:^0.14.1":
   version: 0.14.1
   resolution: "prettier-plugin-astro@npm:0.14.1"
@@ -6969,16 +6951,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.8.8":
-  version: 2.8.8
-  resolution: "prettier@npm:2.8.8"
-  bin:
-    prettier: bin-prettier.js
-  checksum: 10c0/463ea8f9a0946cd5b828d8cf27bd8b567345cf02f56562d5ecde198b91f47a76b7ac9eae0facd247ace70e927143af6135e8cf411986b8cb8478784a4d6d724a
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^3.0.0":
+"prettier@npm:^3.0.0, prettier@npm:^3.3.3":
   version: 3.3.3
   resolution: "prettier@npm:3.3.3"
   bin:
@@ -7533,7 +7506,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.63.5":
+"sass@npm:^1.80.5":
   version: 1.80.5
   resolution: "sass@npm:1.80.5"
   dependencies:
@@ -7808,13 +7781,13 @@ __metadata:
     astro-compress: "npm:^2.3.5"
     astro-critters: "npm:^2.2.0"
     astro-robots-txt: "npm:^1.0.0"
-    autoprefixer: "npm:^10.4.14"
+    autoprefixer: "npm:^10.4.20"
     d3: "npm:^7.8.5"
     dayjs: "npm:^1.11.8"
     nanostores: "npm:^0.9.2"
-    postcss: "npm:^8.4.24"
-    prettier-plugin-astro: "npm:^0.10.0"
-    sass: "npm:^1.63.5"
+    postcss: "npm:^8.4.47"
+    prettier-plugin-astro: "npm:^0.14.1"
+    sass: "npm:^1.80.5"
   languageName: unknown
   linkType: soft
 

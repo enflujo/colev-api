@@ -132,7 +132,7 @@ export type Municipio = [
   /** Código del departamento al que pertenece la ciudad o municipio: ## */
   codigoDepartamento: string,
   /** Código de la ciudad o municipio (incluyendo su departamento): ##### */
-  codigoCompleto: string
+  codigoCompleto: string,
 ];
 export type ObjetoMunicipios = {
   llaves: string[];
@@ -181,7 +181,7 @@ export type TwitterBasicos = {
         name: String;
         description: String;
       };
-    }
+    },
   ];
   conversation_id: String;
   created_at: Date;
@@ -193,28 +193,28 @@ export type TwitterBasicos = {
         probability: Number;
         normalized_text: String;
         type: { type: String };
-      }
+      },
     ];
     cashtags: [
       {
         start: Number;
         end: Number;
         tag: String;
-      }
+      },
     ];
     hashtags: [
       {
         start: Number;
         end: Number;
         tag: String;
-      }
+      },
     ];
     mentions: [
       {
         start: Number;
         end: Number;
         tag: String;
-      }
+      },
     ];
     urls: [
       {
@@ -227,7 +227,7 @@ export type TwitterBasicos = {
         title: String;
         description: String;
         unwound_url: String;
-      }
+      },
     ];
   };
   geo: {
@@ -274,7 +274,7 @@ export type TwitterBasicos = {
     {
       type: { type: String };
       id: String;
-    }
+    },
   ];
   reply_settings: String;
   source: String;

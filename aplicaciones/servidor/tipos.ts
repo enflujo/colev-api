@@ -14,14 +14,14 @@ export type LlavesCasosPorDia = [
   /** Total muertos */
   muertos: string,
   /** Total de casos */
-  total: string
+  total: string,
 ];
 
 export type LlavesTuitsPorDia = [
   /** Fecha */
   fecha: string,
   /** Total de tuits */
-  total: number
+  total: number,
 ];
 
 export type LlavesTuitsPorHora = [
@@ -30,14 +30,14 @@ export type LlavesTuitsPorHora = [
   mes: number,
   dia: number,
   hora: number,
-  tipo: string
+  tipo: string,
 ];
 
 export type LlavesTuitsPorSemana = [
   /** Fecha */
   año: number,
   mes: number,
-  semana: number
+  semana: number,
 ];
 
 export type CasosPorDia = [
@@ -46,7 +46,7 @@ export type CasosPorDia = [
   /** Total muertos */
   muertos: number,
   /** Total de casos */
-  total: number
+  total: number,
 ];
 
 export type RespuestaCasosPorDia = {
