@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   bd:
     container_name: colev-api-bd
