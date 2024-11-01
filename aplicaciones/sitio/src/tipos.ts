@@ -20,3 +20,5 @@ export type FuenteTuitsPorHora = [fecha: string, dia: number, cantidad: number];
 export type FuenteDatos = {
   [llave: string]: { maximo: number; datos: TuitsPorHora[] };
 };
+
+export type Entidad = [nombre: string, cantidad: number];

@@ -199,12 +199,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
 <style lang="scss">
   @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@700;900&family=Vollkorn:ital@0;1&display=swap');
-
-  ::selection {
-    background-color: #ababfb;
-    color: #000;
-  }
-
   $colorOscuro: rgba(11, 14, 223, 0.6);
   $colorClaro: #f4f2fd;
   $fuenteTitulos: 'Titillium Web', sans-serif;
@@ -215,6 +209,11 @@ import Plantilla from '../plantillas/Plantilla.astro';
   $colorPadres: rgba(219, 182, 133, 1);
   $colorOtros: rgb(151, 151, 151);
 
+  ::selection {
+    background-color: #79d380;
+    color: #243a26;
+  }
+
   html,
   body {
     margin: 0;
@@ -224,11 +223,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
     font-family: $fuente;
     color: $colorClaro;
     background-color: $colorOscuro;
-  }
-
-  ::selection {
-    background-color: #79d380;
-    color: #243a26;
   }
 
   h1,
@@ -318,13 +312,15 @@ import Plantilla from '../plantillas/Plantilla.astro';
     .inicioColev {
       margin-right: 2.5em;
       padding: 0 1em;
-      a,
-      a:link {
-        border: none;
-      }
+
       img {
         height: 23px;
         vertical-align: middle;
+      }
+
+      a,
+      a:link {
+        border: none;
       }
     }
   }
@@ -389,16 +385,6 @@ import Plantilla from '../plantillas/Plantilla.astro';
 
     .poblacion {
       margin: 0.2em auto;
-      &::before {
-        content: '';
-        display: inline-block;
-        width: 0.8em;
-        height: 0.8em;
-        background-color: $colorOtros;
-        vertical-align: middle;
-        margin: 0 0.3em;
-        border-radius: 50%;
-      }
 
       &.preescolar {
         &::before {
@@ -422,6 +408,17 @@ import Plantilla from '../plantillas/Plantilla.astro';
         &::before {
           background-color: $colorPadres;
         }
+      }
+
+      &::before {
+        content: '';
+        display: inline-block;
+        width: 0.8em;
+        height: 0.8em;
+        background-color: $colorOtros;
+        vertical-align: middle;
+        margin: 0 0.3em;
+        border-radius: 50%;
       }
     }
   }

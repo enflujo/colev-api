@@ -1,5 +1,5 @@
 ---
-import Plantilla from '../plantillas/Plantilla.astro';
+import Plantilla from '@/plantillas/Plantilla.astro';
 ---
 
 <Plantilla
@@ -38,13 +38,12 @@ import Plantilla from '../plantillas/Plantilla.astro';
 <script>
   import { esconderCargador } from '@/modulos/cargador';
   import { servidorUrl } from '@/modulos/constantes';
+  import type { Entidad } from '@/tipos';
   import { porcentaje } from '@/utilidades/ayudas';
 
   const contenedorEntidades = document.getElementById('contenedorEntidades') as HTMLUListElement;
   const contenedorDominios = document.getElementById('contenedorDominios') as HTMLUListElement;
   const contenedorLeyenda = document.getElementById('leyenda') as HTMLDivElement;
-
-  type Entidad = [nombre: string, cantidad: number];
 
   inicio();
 
