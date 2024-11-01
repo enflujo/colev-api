@@ -112,11 +112,11 @@ import Plantilla from '../plantillas/Plantilla.astro';
     }
   });
 
-  fechasActuales.subscribe((fechas) => {
-    if (fechas.inicio && fechas.fin) {
-      const transformacion = zoomIdentity.translate(ejeX(fechas.inicio), ejeX(fechas.fin));
-      // lienzo.call(lupa.transform, transformacion);
-    }
+  fechasActuales.subscribe(() => {
+    // if (fechas.inicio && fechas.fin) {
+    //   const transformacion = zoomIdentity.translate(ejeX(fechas.inicio), ejeX(fechas.fin));
+    //   // lienzo.call(lupa.transform, transformacion);
+    // }
 
     // escalarEjeX(transformacionActual);
     pintar(transformacionActual);
