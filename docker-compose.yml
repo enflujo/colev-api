@@ -7,6 +7,7 @@ services:
       - colev-api
     volumes:
       - ./basededatos:/data/db
+      - ./respaldo:/data/respaldo
     ports:
       - ${BD_PUERTO}:27017
     environment:

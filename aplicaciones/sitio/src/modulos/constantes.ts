@@ -1,4 +1,5 @@
-export const servidorUrl = import.meta.env.PROD ? '/tally' : 'http://localhost:8080/tally';
+const apiPuerto = import.meta.env.API_PUERTO || 34002;
+export const servidorUrl = import.meta.env.PROD ? '/tally' : `http://localhost:${apiPuerto}/tally`;
 export const zona = 'America/Bogota';
 export const duracion = 250;
 export const margen = { arriba: 140, der: 60, abajo: 50, izq: 30 };
