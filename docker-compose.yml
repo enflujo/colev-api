@@ -9,7 +9,7 @@ services:
       - ./basededatos:/data/db
       - ./respaldo:/data/respaldo
     ports:
-      - ${BD_PUERTO}:27017
+      - 127.0.0.1:${BD_PUERTO}:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${BD_USUARIO}
       MONGO_INITDB_ROOT_PASSWORD: ${BD_CLAVE}
@@ -22,7 +22,7 @@ services:
     networks:
       - colev-api
     ports:
-      - ${CACHE_PUERTO}:6379
+      - 127.0.0.1:${CACHE_PUERTO}:6379
 
 networks:
   colev-api:
